@@ -34,6 +34,8 @@ from jira_tool.document.builders import (
     EpicBuilder,
     IssueBuilder,
     SubtaskBuilder,
+    TypedBuilder,
+    get_profile,
     header_row,
     row,
 )
@@ -101,6 +103,8 @@ __all__ = [
     "EpicBuilder",
     "IssueBuilder",
     "SubtaskBuilder",
+    "TypedBuilder",
+    "get_profile",
     "row",
     "header_row",
     # ADF Extraction

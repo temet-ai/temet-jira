@@ -1,23 +1,25 @@
 """ADF document builder for Jira Issues (Tasks/Stories)."""
 
-from jira_tool.document.builders.base import DocumentBuilder
-from jira_tool.document.nodes.block import (
-    BulletList,
-    CodeBlock,
-    Heading,
-    OrderedList,
-    Panel,
-    Paragraph,
+from __future__ import annotations
+
+from jira_tool.document.builders.sections import (
+    acceptance_criteria_section,
+    dependencies_section,
+    description_section,
+    implementation_details_section,
+    technical_notes_section,
+    testing_notes_section,
 )
-from jira_tool.document.nodes.inline import Text
-from jira_tool.document.nodes.marks import Strong
+from jira_tool.document.builders.typed import TypedBuilder
+from jira_tool.document.nodes.block import CodeBlock, Heading
 
 
-class IssueBuilder(DocumentBuilder):
+class IssueBuilder(TypedBuilder):
     """Builder for creating Issue/Task documents with standardized layout.
 
-    Issues represent concrete work items that can be completed in a sprint.
-    This builder provides a structured format for Task and Story descriptions.
+    Thin wrapper around TypedBuilder("_default", ...) preserving the original API.
+    None values for story_points/epic_key are omitted from the header panel
+    (no more "TBD"/"None" sentinels).
 
     Example:
         issue = (
@@ -36,60 +38,34 @@ class IssueBuilder(DocumentBuilder):
         story_points: int | None = None,
         epic_key: str | None = None,
     ) -> None:
-        """Initialize Issue builder with required fields.
-
-        Args:
-            title: Issue title (without emoji, added automatically)
-            component: Component this issue belongs to
-            story_points: Estimated story points
-            epic_key: Parent epic key (e.g., "PROJ-123")
-        """
-        super().__init__()
-        self.title = title
-        self.component = component
-        self.story_points = story_points or "TBD"
-        self.epic_key = epic_key or "None"
-        self._build_header()
-
-    def _build_header(self) -> "IssueBuilder":
-        """Build the standard issue header with info panel."""
-        self._content.append(Heading(f"📋 {self.title}", level=1))
-
-        info_content = Paragraph(
-            Text("⚙️ Component: ", marks=[Strong()]),
-            Text(self.component),
-            Text(" | "),
-            Text("📊 Story Points: ", marks=[Strong()]),
-            Text(str(self.story_points)),
-            Text(" | "),
-            Text("🔗 Epic: ", marks=[Strong()]),
-            Text(str(self.epic_key)),
+        # Translate public param names to profile field names
+        super().__init__(
+            "_default",
+            title,
+            component=component,
+            story_points=story_points,
+            epic=epic_key,
         )
-        self._content.append(Panel(info_content, panel_type="info"))
-        return self
+        self.epic_key = epic_key  # preserve for backward compat attribute access
 
     def add_description(self, description: str) -> "IssueBuilder":
         """Add description section in a note panel."""
-        self._content.append(Heading("📋 Description", level=2))
-        self._content.append(Panel(Paragraph(description), panel_type="note"))
+        description_section(self, description)
         return self
 
     def add_implementation_details(self, details: list[str]) -> "IssueBuilder":
         """Add implementation details section in an info panel."""
-        self._content.append(Heading("🔧 Implementation Details", level=2))
-        self._content.append(Panel(BulletList(*details), panel_type="info"))
+        implementation_details_section(self, details)
         return self
 
     def add_acceptance_criteria(self, criteria: list[str]) -> "IssueBuilder":
         """Add acceptance criteria section in a success panel."""
-        self._content.append(Heading("✅ Acceptance Criteria", level=2))
-        self._content.append(Panel(OrderedList(*criteria), panel_type="success"))
+        acceptance_criteria_section(self, criteria)
         return self
 
     def add_technical_notes(self, notes: list[str]) -> "IssueBuilder":
         """Add technical notes section."""
-        self._content.append(Heading("📝 Technical Notes", level=2))
-        self._content.append(Panel(BulletList(*notes), panel_type="note"))
+        technical_notes_section(self, notes)
         return self
 
     def add_code_example(
@@ -97,18 +73,16 @@ class IssueBuilder(DocumentBuilder):
     ) -> "IssueBuilder":
         """Add a code example with optional title."""
         if title:
-            self._content.append(Heading(f"💻 {title}", level=3))
+            self._content.append(Heading(f"\U0001f4bb {title}", level=3))  # 💻
         self._content.append(CodeBlock(code, language))
         return self
 
     def add_dependencies(self, dependencies: list[str]) -> "IssueBuilder":
         """Add dependencies section (blocked by or blocks)."""
-        self._content.append(Heading("🔗 Dependencies", level=2))
-        self._content.append(Panel(BulletList(*dependencies), panel_type="warning"))
+        dependencies_section(self, dependencies)
         return self
 
     def add_testing_notes(self, notes: list[str]) -> "IssueBuilder":
         """Add testing notes section."""
-        self._content.append(Heading("🧪 Testing Notes", level=2))
-        self._content.append(Panel(BulletList(*notes), panel_type="info"))
+        testing_notes_section(self, notes)
         return self

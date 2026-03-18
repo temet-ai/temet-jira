@@ -1,23 +1,19 @@
 """ADF document builder for Jira Subtasks."""
 
-from jira_tool.document.builders.base import DocumentBuilder
-from jira_tool.document.nodes.block import (
-    BulletList,
-    CodeBlock,
-    Heading,
-    OrderedList,
-    Panel,
-    Paragraph,
+from __future__ import annotations
+
+from jira_tool.document.builders.sections import (
+    done_criteria_section,
+    steps_section,
 )
-from jira_tool.document.nodes.inline import Text
-from jira_tool.document.nodes.marks import Strong
+from jira_tool.document.builders.typed import TypedBuilder
+from jira_tool.document.nodes.block import BulletList, CodeBlock, Heading, Panel, Paragraph
 
 
-class SubtaskBuilder(DocumentBuilder):
+class SubtaskBuilder(TypedBuilder):
     """Builder for creating Subtask documents with streamlined layout.
 
-    Subtasks are small, concrete pieces of work that are part of a parent
-    issue. They have a simpler, more focused structure than full issues.
+    Thin wrapper around TypedBuilder("sub-task", ...) preserving the original API.
 
     Example:
         subtask = (
@@ -35,58 +31,32 @@ class SubtaskBuilder(DocumentBuilder):
         parent_key: str | None = None,
         estimated_hours: float | None = None,
     ) -> None:
-        """Initialize Subtask builder with required fields.
-
-        Args:
-            title: Subtask title (without emoji, added automatically)
-            parent_key: Parent issue key (e.g., "PROJ-456")
-            estimated_hours: Estimated time in hours
-        """
-        super().__init__()
-        self.title = title
-        self.parent_key = parent_key or "None"
+        super().__init__(
+            "sub-task",
+            title,
+            parent=parent_key,
+            estimated_hours=estimated_hours,
+        )
         self.estimated_hours = estimated_hours
-        self._build_header()
-
-    def _build_header(self) -> "SubtaskBuilder":
-        """Build the subtask header with parent link."""
-        self._content.append(Heading(f"📌 {self.title}", level=1))
-
-        info_parts = [
-            Text("🔗 Parent: ", marks=[Strong()]),
-            Text(str(self.parent_key)),
-        ]
-
-        if self.estimated_hours is not None:
-            info_parts.extend([
-                Text(" | "),
-                Text("⏱️ Estimate: ", marks=[Strong()]),
-                Text(f"{self.estimated_hours}h"),
-            ])
-
-        self._content.append(Panel(Paragraph(*info_parts), panel_type="info"))
-        return self
 
     def add_description(self, description: str) -> "SubtaskBuilder":
-        """Add a brief description."""
+        """Add a brief description (plain paragraph, no panel)."""
         self._content.append(Paragraph(description))
         return self
 
     def add_steps(self, steps: list[str]) -> "SubtaskBuilder":
         """Add implementation steps as an ordered list."""
-        self._content.append(Heading("📝 Steps", level=2))
-        self._content.append(OrderedList(*steps))
+        steps_section(self, steps)
         return self
 
     def add_done_criteria(self, criteria: list[str]) -> "SubtaskBuilder":
         """Add definition of done criteria."""
-        self._content.append(Heading("✅ Done When", level=2))
-        self._content.append(Panel(BulletList(*criteria), panel_type="success"))
+        done_criteria_section(self, criteria)
         return self
 
     def add_notes(self, notes: list[str]) -> "SubtaskBuilder":
         """Add technical notes."""
-        self._content.append(Heading("📝 Notes", level=2))
+        self._content.append(Heading("\U0001f4dd Notes", level=2))  # 📝
         self._content.append(BulletList(*notes))
         return self
 
@@ -97,6 +67,6 @@ class SubtaskBuilder(DocumentBuilder):
 
     def add_blockers(self, blockers: list[str]) -> "SubtaskBuilder":
         """Add blockers or dependencies."""
-        self._content.append(Heading("🚧 Blockers", level=2))
+        self._content.append(Heading("\U0001f6a7 Blockers", level=2))  # 🚧
         self._content.append(Panel(BulletList(*blockers), panel_type="warning"))
         return self
