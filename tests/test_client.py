@@ -179,3 +179,115 @@ class TestGetEpics:
 
             # Verify result
             assert result == [{"key": "EPIC-1"}]
+
+
+class TestGetComments:
+    """Tests for get_comments method."""
+
+    def test_get_comments_default_params(self, jira_client, mock_response):
+        """Test get_comments with default parameters."""
+        mock_response.json.return_value = {
+            "comments": [
+                {"id": "1", "body": "First comment"},
+                {"id": "2", "body": "Second comment"},
+            ]
+        }
+
+        with patch.object(
+            jira_client, "_request", return_value=mock_response
+        ) as mock_request:
+            comments = jira_client.get_comments("TEST-1")
+
+            # Verify the request was made with correct URL and default params
+            mock_request.assert_called_once()
+            call_args = mock_request.call_args
+            assert call_args[0] == (
+                "GET",
+                f"{TEST_JIRA_BASE_URL}/rest/api/3/issue/TEST-1/comment",
+            )
+            params = call_args[1]["params"]
+            assert params["maxResults"] == 50
+            assert params["orderBy"] == "-created"
+
+            # Verify result
+            assert len(comments) == 2
+            assert comments[0]["id"] == "1"
+            assert comments[1]["id"] == "2"
+
+    def test_get_comments_custom_params(self, jira_client, mock_response):
+        """Test get_comments with custom max_results and order_by."""
+        mock_response.json.return_value = {
+            "comments": [{"id": "1", "body": "Only comment"}]
+        }
+
+        with patch.object(
+            jira_client, "_request", return_value=mock_response
+        ) as mock_request:
+            comments = jira_client.get_comments(
+                "TEST-1", max_results=10, order_by="+created"
+            )
+
+            # Verify custom params were passed
+            mock_request.assert_called_once()
+            call_args = mock_request.call_args
+            params = call_args[1]["params"]
+            assert params["maxResults"] == 10
+            assert params["orderBy"] == "+created"
+
+            # Verify result
+            assert len(comments) == 1
+
+    def test_get_comments_empty(self, jira_client, mock_response):
+        """Test get_comments when API returns no comments."""
+        mock_response.json.return_value = {"comments": []}
+
+        with patch.object(
+            jira_client, "_request", return_value=mock_response
+        ) as mock_request:
+            comments = jira_client.get_comments("TEST-1")
+
+            # Verify request was made
+            mock_request.assert_called_once()
+
+            # Verify empty list returned
+            assert comments == []
+
+
+class TestGetIssueTypes:
+    """Tests for get_issue_types method."""
+
+    def test_get_issue_types_new_endpoint(self, jira_client, mock_response):
+        """Test get_issue_types uses new createmeta endpoint."""
+        mock_response.json.return_value = {
+            "issueTypes": [
+                {"id": "1", "name": "Task", "subtask": False},
+                {"id": "2", "name": "Risk", "subtask": False},
+            ]
+        }
+        with patch.object(jira_client.session, "request", return_value=mock_response):
+            types = jira_client.get_issue_types("WPCW")
+            assert len(types) == 2
+            assert types[0]["name"] == "Task"
+            assert types[1]["name"] == "Risk"
+
+    def test_get_issue_types_fallback(self, jira_client, mock_response):
+        """Test get_issue_types falls back to old endpoint on HTTPError."""
+        from requests.exceptions import HTTPError
+
+        new_response = MagicMock()
+        new_response.raise_for_status.side_effect = HTTPError(
+            response=MagicMock(status_code=404)
+        )
+
+        old_response = MagicMock()
+        old_response.json.return_value = {
+            "projects": [{"issuetypes": [{"name": "Bug", "subtask": False}]}]
+        }
+        old_response.raise_for_status = MagicMock()
+
+        with patch.object(
+            jira_client.session, "request", side_effect=[new_response, old_response]
+        ):
+            types = jira_client.get_issue_types("WPCW")
+            assert len(types) == 1
+            assert types[0]["name"] == "Bug"

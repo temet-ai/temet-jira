@@ -8,15 +8,18 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+from .config import get_value
+
 
 def _get_default_max_results() -> int:
-    """Get default max results from environment variable.
+    """Get default max results from config or environment variable.
 
     Returns:
-        Default maximum results per page (from JIRA_DEFAULT_MAX_RESULTS env var, defaults to 300)
+        Default maximum results per page (defaults to 300)
     """
     try:
-        return int(os.environ.get("JIRA_DEFAULT_MAX_RESULTS", "300"))
+        value = get_value("max_results")
+        return int(value) if value else 300
     except ValueError:
         return 300
 
@@ -38,25 +41,30 @@ class JiraClient:
     ) -> None:
         """Initialize Jira client with credentials and configuration.
 
+        Credentials are resolved in this order:
+        1. Explicit arguments passed to __init__
+        2. Environment variables (JIRA_BASE_URL, JIRA_USERNAME, JIRA_API_TOKEN)
+        3. Config file (~/.config/jira-tool/config.yaml)
+
         Args:
-            base_url: Jira instance URL (defaults to JIRA_BASE_URL env var)
+            base_url: Jira instance URL
             username: Jira username/email
             api_token: Jira API token
             timeout: Request timeout in seconds
             max_retries: Maximum number of retry attempts
         """
-        resolved_base_url = base_url or os.environ.get("JIRA_BASE_URL")
-        resolved_username = username or os.environ.get("JIRA_USERNAME")
-        resolved_api_token = api_token or os.environ.get("JIRA_API_TOKEN")
+        resolved_base_url = base_url or get_value("base_url")
+        resolved_username = username or get_value("username")
+        resolved_api_token = api_token or get_value("api_token")
         self.timeout = timeout
 
         if not resolved_base_url:
             raise ValueError(
-                "JIRA_BASE_URL must be provided or set as an environment variable"
+                "Jira URL not configured. Run 'jira-tool setup' or set JIRA_BASE_URL"
             )
         if not resolved_username or not resolved_api_token:
             raise ValueError(
-                "JIRA_USERNAME and JIRA_API_TOKEN must be provided or set as environment variables"
+                "Jira credentials not configured. Run 'jira-tool setup' or set JIRA_USERNAME and JIRA_API_TOKEN"
             )
 
         self.base_url = resolved_base_url
@@ -183,6 +191,31 @@ class JiraClient:
 
         response = self._request("POST", url, json=data)
         return cast(dict[str, Any], response.json())
+
+    def get_comments(
+        self,
+        issue_key: str,
+        max_results: int = 50,
+        order_by: str = "-created",
+    ) -> list[dict[str, Any]]:
+        """Fetch comments for a Jira issue.
+
+        Args:
+            issue_key: Jira issue key (e.g., PROJ-123)
+            max_results: Maximum number of comments to return (default 50)
+            order_by: Sort order — '-created' (newest first) or '+created' (oldest first)
+
+        Returns:
+            List of comment dicts from the Jira API
+        """
+        url = f"{self.base_url}/rest/api/3/issue/{issue_key}/comment"
+        params: dict[str, Any] = {
+            "maxResults": max_results,
+            "orderBy": order_by,
+        }
+        response = self._request("GET", url, params=params)
+        data = cast(dict[str, Any], response.json())
+        return cast(list[dict[str, Any]], data.get("comments", []))
 
     def get_transitions(self, issue_key: str) -> list[dict[str, Any]]:
         """Get available transitions for an issue.
@@ -469,12 +502,25 @@ class JiraClient:
     def get_issue_types(self, project_key: str) -> list[dict[str, Any]]:
         """Get available issue types for a project.
 
+        Uses the new createmeta/{project}/issuetypes endpoint first,
+        falls back to the deprecated createmeta endpoint if unavailable.
+
         Args:
             project_key: Project key
 
         Returns:
             List of issue types
         """
+        # Try new endpoint first
+        try:
+            url = f"{self.base_url}/rest/api/3/issue/createmeta/{project_key}/issuetypes"
+            response = self._request("GET", url)
+            data = cast(dict[str, Any], response.json())
+            return cast(list[dict[str, Any]], data.get("issueTypes", data.get("values", [])))
+        except requests.exceptions.HTTPError:
+            pass
+
+        # Fallback to deprecated endpoint
         url = f"{self.base_url}/rest/api/3/issue/createmeta"
         params = {"projectKeys": project_key, "expand": "projects.issuetypes.fields"}
 
