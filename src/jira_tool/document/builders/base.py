@@ -1,6 +1,6 @@
 """Base fluent document builder for ADF documents."""
 
-from typing import Any
+from typing import Any, Literal
 
 from jira_tool.document.nodes.base import Node
 from jira_tool.document.nodes.block import (
@@ -141,14 +141,11 @@ class DocumentBuilder:
     def panel(
         self,
         *content: Node | str,
-        panel_type: str = "info",
+        panel_type: Literal["info", "note", "warning", "success", "error"] = "info",
     ) -> "DocumentBuilder":
         """Add a panel (info, note, warning, success, error)."""
-        valid_types = ("info", "note", "warning", "success", "error")
-        if panel_type not in valid_types:
-            raise ValueError(f"Panel type must be one of: {', '.join(valid_types)}")
         self._content.append(
-            Panel(*content, panel_type=panel_type)  # type: ignore[arg-type]
+            Panel(*content, panel_type=panel_type)
         )
         return self
 
@@ -189,13 +186,10 @@ class DocumentBuilder:
     def status(
         self,
         text: str,
-        color: str = "neutral",
+        color: Literal["neutral", "purple", "blue", "red", "yellow", "green"] = "neutral",
     ) -> Status:
         """Create a status lozenge node (does not add to document)."""
-        valid_colors = ("neutral", "purple", "blue", "red", "yellow", "green")
-        if color not in valid_colors:
-            raise ValueError(f"Status color must be one of: {', '.join(valid_colors)}")
-        return Status(text, color)  # type: ignore[arg-type]
+        return Status(text, color)
 
     def inline_card(self, url: str) -> InlineCard:
         """Create an inline card/smart link node (does not add to document)."""
@@ -208,6 +202,51 @@ class DocumentBuilder:
     def add(self, node: Node) -> "DocumentBuilder":
         """Add any node to the document."""
         self._content.append(node)
+        return self
+
+    def add_titled_section(
+        self,
+        title: str,
+        *content: "Node | str",
+        panel_type: Literal["info", "note", "warning", "success", "error"] = "info",
+    ) -> "DocumentBuilder":
+        """Add a heading followed by a panel — the common section pattern."""
+        self._content.append(Heading(title, level=2))
+        self._content.append(Panel(*content, panel_type=panel_type))
+        return self
+
+    def add_header_info_panel(
+        self,
+        title: str,
+        fields: dict[str, str],
+        emoji: str = "\U0001f4cb",
+        panel_type: Literal["info", "note", "warning", "success", "error"] = "info",
+        field_labels: dict[str, str] | None = None,
+    ) -> "DocumentBuilder":
+        """Add a level-1 heading with emoji + key-value info panel.
+
+        Args:
+            title: The heading text (emoji is prepended)
+            fields: Dict of field_name -> value (only non-None fields)
+            emoji: Emoji character to prepend to heading
+            panel_type: Panel style
+            field_labels: Map of field_name -> "emoji Label" display string
+        """
+        from jira_tool.document.builders.profiles import FIELD_LABELS as DEFAULT_LABELS
+
+        labels = field_labels or DEFAULT_LABELS
+        self._content.append(Heading(f"{emoji} {title}", level=1))
+
+        parts: list[Text] = []
+        for i, (key, value) in enumerate(fields.items()):
+            if i > 0:
+                parts.append(Text(" | "))
+            label = labels.get(key, key.replace("_", " ").title())
+            parts.append(Text(f"{label}: ", marks=[Strong()]))
+            parts.append(Text(str(value)))
+
+        if parts:
+            self._content.append(Panel(Paragraph(*parts), panel_type=panel_type))
         return self
 
     def build(self) -> dict[str, Any]:
