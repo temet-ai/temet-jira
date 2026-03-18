@@ -16,7 +16,18 @@ from rich.prompt import Prompt
 from .analysis.formatters import format_as_csv, format_as_json, format_as_jsonl
 from .analysis.state_analyzer import StateDurationAnalyzer
 from .client import JiraClient
-from .document import DocumentBuilder, EpicBuilder, IssueBuilder
+from .config import (
+    VALID_KEYS,
+    config_exists,
+    delete_value,
+    get_all_config,
+    get_config_path,
+    get_value,
+    is_configured,
+    mask_sensitive,
+    set_value,
+)
+from .document import DocumentBuilder, TypedBuilder
 from .formatter import format_issue, format_issues_table
 
 # Load environment variables from .env file
@@ -45,13 +56,84 @@ def jira() -> None:
 
 @jira.command()
 @click.argument("issue_key")
-def get(issue_key: str) -> None:
+@click.option(
+    "--format",
+    "-f",
+    "output_format",
+    type=click.Choice(["json", "jsonl", "table"], case_sensitive=False),
+    default="table",
+    help="Output format (json|jsonl|table) — default: table",
+)
+@click.option("--output", "-o", help="Output file path (optional)")
+@click.option(
+    "--expand",
+    help="Expand fields like changelog, transitions (comma-separated)",
+)
+@click.option(
+    "--comments",
+    is_flag=True,
+    default=False,
+    help="Fetch and display comments for the issue",
+)
+@click.option(
+    "--fields",
+    type=click.Choice(["standard", "all"], case_sensitive=False),
+    default="standard",
+    help="Field set to display: standard (default) or all (includes Other Fields)",
+)
+def get(
+    issue_key: str,
+    output_format: str,
+    output: str | None,
+    expand: str | None,
+    comments: bool,
+    fields: str,
+) -> None:
     """Get details of a Jira issue."""
     try:
         client = JiraClient()
+
+        # Parse expand options — always include "names" for human-readable field labels
+        expand_list = (
+            [e.strip() for e in expand.split(",")]
+            if expand and expand.strip()
+            else []
+        )
+        if "names" not in expand_list:
+            expand_list.append("names")
+
         with console.status(f"Fetching issue {issue_key}..."):
-            issue = client.get_issue(issue_key)
-        format_issue(issue)
+            issue = client.get_issue(issue_key, expand=expand_list)
+
+        # Fetch comments if requested
+        comment_list: list[dict[str, Any]] | None = None
+        if comments:
+            with console.status(f"Fetching comments for {issue_key}..."):
+                comment_list = client.get_comments(issue_key)
+
+        # Handle output format
+        if output_format == "json":
+            formatted = format_as_json([issue])
+            if output:
+                Path(output).write_text(formatted)
+                console.print(f"[green]✓[/green] Issue saved to {output}")
+            else:
+                click.echo(formatted)
+        elif output_format == "jsonl":
+            formatted = format_as_jsonl([issue])
+            if output:
+                Path(output).write_text(formatted)
+                console.print(f"[green]✓[/green] Issue saved to {output}")
+            else:
+                click.echo(formatted)
+        else:  # table (default)
+            format_issue(issue, comments=comment_list, show_all_fields=(fields == "all"))
+            if output:
+                console.print(
+                    "[yellow]Note: Table format cannot be saved to file. "
+                    "Use --format json or --format jsonl for file output.[/yellow]"
+                )
+
     except Exception as e:
         console.print(f"[red]Error:[/red] {str(e)}")
         raise click.Abort() from e
@@ -412,6 +494,46 @@ def transitions(issue_key: str) -> None:
 
 
 @jira.command()
+@click.option(
+    "--project",
+    default=lambda: os.environ.get("JIRA_DEFAULT_PROJECT", "PROJ"),
+    help="Project key (configurable via JIRA_DEFAULT_PROJECT)",
+)
+def types(project: str) -> None:
+    """List available issue types for a project."""
+    try:
+        client = JiraClient()
+
+        with console.status(f"Fetching issue types for {project}..."):
+            issue_types = client.get_issue_types(project)
+
+        if not issue_types:
+            console.print(f"[yellow]No issue types found for project {project}[/yellow]")
+            return
+
+        from jira_tool.document.builders.profiles import TYPE_PROFILES
+
+        from rich.table import Table
+
+        table = Table(title=f"Issue Types — {project}")
+        table.add_column("Name", style="cyan", no_wrap=True)
+        table.add_column("Subtask", style="yellow")
+        table.add_column("Custom Profile", style="green")
+
+        for it in sorted(issue_types, key=lambda x: x.get("name", "")):
+            name = it.get("name", "Unknown")
+            subtask = "Yes" if it.get("subtask", False) else "No"
+            has_profile = "Yes" if name.lower() in TYPE_PROFILES else "No"
+            table.add_row(name, subtask, has_profile)
+
+        console.print(table)
+
+    except Exception as e:
+        console.print(f"[red]Error:[/red] {str(e)}")
+        raise click.Abort() from e
+
+
+@jira.command()
 @click.option("--summary", "-s", required=True, help="Issue summary/title")
 @click.option("--description", "-d", help="Issue description")
 @click.option(
@@ -419,7 +541,7 @@ def transitions(issue_key: str) -> None:
     "-t",
     "issue_type",
     default="Task",
-    help="Issue type (Task, Story, Bug)",
+    help="Issue type — run 'jira-tool types' to see available types",
 )
 @click.option("--epic", "-e", help="Epic key to link to (e.g., PROJ-123)")
 @click.option("--priority", "-p", help="Priority (Highest, High, Medium, Low, Lowest)")
@@ -445,45 +567,19 @@ def create(
         # Parse labels if provided
         label_list = [label.strip() for label in labels.split(",")] if labels else None
 
-        # Use appropriate builder based on issue type
-        fields: dict[str, Any]
-        if issue_type.lower() == "epic":
-            # Create epic with EpicBuilder
-            epic_builder = EpicBuilder(
-                title=summary,
-                priority="P1",
-                dependencies="None",
-                services="TBD",
-            )
+        # Build ADF description using TypedBuilder
+        # Pass only description — header fields are optional from CLI.
+        # For richer documents, use the programmatic API or --description-adf.
+        builder = TypedBuilder(issue_type, summary)
+        if description:
+            builder.add_section_optional("description", text=description)
 
-            if description:
-                epic_builder.add_description(description)
-
-            fields = {
-                "project": {"key": project},
-                "summary": summary,
-                "issuetype": {"name": "Epic"},
-                "description": epic_builder.build(),
-            }
-        else:
-            # Create issue/task with IssueBuilder
-            issue_builder = IssueBuilder(
-                title=summary,
-                component="General",
-                story_points=None,
-                epic_key=epic,
-            )
-
-            if description:
-                issue_builder.add_description(description)
-
-            # Build the fields
-            fields = {
-                "project": {"key": project},
-                "summary": summary,
-                "issuetype": {"name": issue_type},
-                "description": issue_builder.build(),
-            }
+        fields: dict[str, Any] = {
+            "project": {"key": project},
+            "summary": summary,
+            "issuetype": {"name": issue_type},
+            "description": builder.build(),
+        }
 
         # Add priority if provided
         if priority:
@@ -502,7 +598,7 @@ def create(
 
         issue_key = result.get("key")
         console.print(
-            f"[green]✓[/green] {issue_type} created successfully: {issue_key}"
+            f"[green]\u2713[/green] {issue_type} created successfully: {issue_key}"
         )
 
         # Show the created issue
@@ -1225,3 +1321,279 @@ def state_durations(
     except Exception as e:
         console.print(f"[red]Error:[/red] Unexpected error: {e}")
         raise click.Abort() from e
+
+
+# =============================================================================
+# Configuration Commands
+# =============================================================================
+
+
+@jira.command()
+def setup() -> None:
+    """Interactive setup wizard for jira-tool configuration.
+
+    Guides you through configuring your Jira credentials and saves them
+    to ~/.config/jira-tool/config.yaml for future use.
+    """
+    from rich.panel import Panel
+
+    console.print()
+    console.print(
+        Panel.fit(
+            "[bold blue]jira-tool Setup Wizard[/bold blue]\n\n"
+            "This will help you configure jira-tool with your Jira credentials.\n"
+            f"Configuration will be saved to: [cyan]{get_config_path()}[/cyan]",
+            border_style="blue",
+        )
+    )
+    console.print()
+
+    # Check if already configured
+    if is_configured():
+        console.print("[yellow]⚠️  jira-tool is already configured.[/yellow]")
+        console.print()
+        existing = get_all_config()
+        console.print("[dim]Current configuration:[/dim]")
+        for key, info in existing.items():
+            if info["value"]:
+                console.print(f"  {key}: {mask_sensitive(info['value'], key)} ({info['source']})")
+        console.print()
+
+        if not Prompt.ask(
+            "Do you want to reconfigure?",
+            choices=["y", "n"],
+            default="n",
+        ) == "y":
+            console.print("[dim]Setup cancelled.[/dim]")
+            return
+
+    console.print()
+    console.print("[bold]Step 1: Jira Instance URL[/bold]")
+    console.print("[dim]This is your Jira Cloud URL (e.g., https://company.atlassian.net)[/dim]")
+
+    current_url = get_value("base_url")
+    base_url = Prompt.ask(
+        "Jira URL",
+        default=current_url or "https://your-company.atlassian.net",
+    )
+
+    # Validate URL format
+    if not base_url.startswith("https://"):
+        console.print("[yellow]Warning: URL should start with https://[/yellow]")
+        if not base_url.startswith("http"):
+            base_url = "https://" + base_url
+
+    # Remove trailing slash
+    base_url = base_url.rstrip("/")
+
+    console.print()
+    console.print("[bold]Step 2: Your Email Address[/bold]")
+    console.print("[dim]The email you use to log into Jira[/dim]")
+
+    current_username = get_value("username")
+    username = Prompt.ask(
+        "Email",
+        default=current_username or "",
+    )
+
+    console.print()
+    console.print("[bold]Step 3: API Token[/bold]")
+    console.print("[dim]Generate at: https://id.atlassian.com/manage-profile/security/api-tokens[/dim]")
+    console.print("[dim]The token will be stored securely and masked in displays.[/dim]")
+
+    api_token = Prompt.ask(
+        "API Token",
+        password=True,
+    )
+
+    if not api_token:
+        console.print("[red]Error: API token is required[/red]")
+        raise click.Abort()
+
+    console.print()
+    console.print("[bold]Step 4: Project (Optional)[/bold]")
+    console.print("[dim]Set a project key to avoid typing --project every time[/dim]")
+
+    current_project = get_value("project")
+    project = Prompt.ask(
+        "Project key",
+        default=current_project or "",
+    )
+
+    # Save configuration
+    console.print()
+    console.print("[dim]Saving configuration...[/dim]")
+
+    try:
+        set_value("base_url", base_url)
+        set_value("username", username)
+        set_value("api_token", api_token)
+        if project:
+            set_value("project", project)
+
+        console.print(f"[green]✓[/green] Configuration saved to {get_config_path()}")
+    except Exception as e:
+        console.print(f"[red]Error saving configuration:[/red] {e}")
+        raise click.Abort() from e
+
+    # Test the connection
+    console.print()
+    console.print("[dim]Testing connection...[/dim]")
+
+    try:
+        client = JiraClient(
+            base_url=base_url,
+            username=username,
+            api_token=api_token,
+        )
+        # Try to get current user info
+        response = client.session.get(f"{base_url}/rest/api/3/myself")
+        if response.status_code == 200:
+            user_data = response.json()
+            display_name = user_data.get("displayName", username)
+            console.print(f"[green]✓[/green] Connected successfully as [bold]{display_name}[/bold]")
+        else:
+            console.print(f"[yellow]⚠️  Connection test returned status {response.status_code}[/yellow]")
+            console.print("[dim]Configuration saved, but you may need to verify your credentials.[/dim]")
+    except Exception as e:
+        console.print(f"[yellow]⚠️  Connection test failed:[/yellow] {e}")
+        console.print("[dim]Configuration saved, but please verify your credentials.[/dim]")
+
+    console.print()
+    console.print("[bold green]Setup complete![/bold green]")
+    console.print()
+    console.print("Try these commands:")
+    console.print("  [cyan]jira-tool config[/cyan]        - View your configuration")
+    if project:
+        console.print(f"  [cyan]jira-tool export[/cyan]        - Export tickets from {project}")
+    console.print("  [cyan]jira-tool search \"status = Open\"[/cyan]  - Search for issues")
+    console.print()
+
+
+@jira.group(name="config")
+def config_cmd() -> None:
+    """View and manage jira-tool configuration."""
+    pass
+
+
+@config_cmd.command(name="show")
+def config_show() -> None:
+    """Show current configuration."""
+    from rich.table import Table
+
+    config = get_all_config()
+
+    if not any(info["value"] for info in config.values()):
+        console.print("[yellow]No configuration found.[/yellow]")
+        console.print(f"[dim]Config file location: {get_config_path()}[/dim]")
+        console.print()
+        console.print("Run [cyan]jira-tool setup[/cyan] to configure.")
+        return
+
+    table = Table(title="jira-tool Configuration", show_header=True)
+    table.add_column("Setting", style="cyan")
+    table.add_column("Value")
+    table.add_column("Source", style="dim")
+
+    for key, info in config.items():
+        value = mask_sensitive(info["value"], key)
+        table.add_row(key, value, info["source"])
+
+    console.print(table)
+    console.print()
+    console.print(f"[dim]Config file: {get_config_path()}[/dim]")
+
+
+@config_cmd.command(name="set")
+@click.argument("key")
+@click.argument("value")
+def config_set(key: str, value: str) -> None:
+    """Set a configuration value.
+
+    Example:
+        jira-tool config set project PROJ
+    """
+    try:
+        set_value(key, value)
+        display_value = mask_sensitive(value, key)
+        console.print(f"[green]✓[/green] Set {key} = {display_value}")
+    except ValueError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        console.print()
+        console.print("[dim]Valid keys:[/dim]")
+        for k, desc in VALID_KEYS.items():
+            console.print(f"  [cyan]{k}[/cyan] - {desc}")
+        raise click.Abort() from e
+
+
+@config_cmd.command(name="get")
+@click.argument("key")
+def config_get(key: str) -> None:
+    """Get a configuration value.
+
+    Example:
+        jira-tool config get base_url
+    """
+    value = get_value(key)
+    if value:
+        display_value = mask_sensitive(value, key)
+        console.print(display_value)
+    else:
+        console.print(f"[yellow]{key} is not set[/yellow]")
+        raise click.Abort()
+
+
+@config_cmd.command(name="unset")
+@click.argument("key")
+def config_unset(key: str) -> None:
+    """Remove a configuration value.
+
+    Example:
+        jira-tool config unset project
+    """
+    if delete_value(key):
+        console.print(f"[green]✓[/green] Removed {key}")
+    else:
+        console.print(f"[yellow]{key} was not set in config file[/yellow]")
+
+
+@config_cmd.command(name="path")
+def config_path() -> None:
+    """Show the config file path."""
+    path = get_config_path()
+    console.print(str(path))
+    if config_exists():
+        console.print("[dim](file exists)[/dim]")
+    else:
+        console.print("[dim](file does not exist)[/dim]")
+
+
+@config_cmd.command(name="edit")
+def config_edit() -> None:
+    """Open config file in default editor."""
+    import subprocess
+
+    path = get_config_path()
+
+    if not config_exists():
+        console.print("[yellow]Config file does not exist yet.[/yellow]")
+        console.print("Run [cyan]jira-tool setup[/cyan] first, or create it manually.")
+        return
+
+    editor = os.environ.get("EDITOR", "nano")
+    try:
+        subprocess.run([editor, str(path)], check=True)
+    except FileNotFoundError:
+        console.print(f"[red]Error:[/red] Editor '{editor}' not found")
+        console.print(f"[dim]Set EDITOR environment variable or edit manually: {path}[/dim]")
+    except subprocess.CalledProcessError as e:
+        console.print(f"[red]Error:[/red] Editor exited with error: {e}")
+
+
+# Make 'jira-tool config' with no subcommand show the config
+@config_cmd.result_callback()
+@click.pass_context
+def config_default(ctx: click.Context, *args: Any, **kwargs: Any) -> None:
+    """Show config if no subcommand is given."""
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(config_show)
