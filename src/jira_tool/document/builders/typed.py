@@ -36,7 +36,7 @@ class TypedBuilder(DocumentBuilder):
         present_fields = {k: v for k, v in fields.items() if v is not None}
         header_panel(self, self.title, present_fields, emoji, panel_type)
 
-    def add_section(self, section_name: str, **kwargs: Any) -> "TypedBuilder":
+    def add_section(self, section_name: str, **kwargs: Any) -> TypedBuilder:
         """Add a section by name. Validates against profile's allowed sections.
 
         Raises ValueError if section_name is not in the profile's section list.
@@ -49,7 +49,7 @@ class TypedBuilder(DocumentBuilder):
         SECTION_REGISTRY[section_name](self, **kwargs)
         return self
 
-    def add_section_optional(self, section_name: str, **kwargs: Any) -> "TypedBuilder":
+    def add_section_optional(self, section_name: str, **kwargs: Any) -> TypedBuilder:
         """Add a section if it's in this type's profile, skip otherwise."""
         if section_name in self.profile["sections"]:
             SECTION_REGISTRY[section_name](self, **kwargs)

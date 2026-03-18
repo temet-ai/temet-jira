@@ -47,12 +47,12 @@ class EpicBuilder(TypedBuilder):
             services=services,
         )
 
-    def add_problem_statement(self, problem: str) -> "EpicBuilder":
+    def add_problem_statement(self, problem: str) -> EpicBuilder:
         """Add problem statement section."""
         problem_statement_section(self, problem)
         return self
 
-    def add_description(self, description: str) -> "EpicBuilder":
+    def add_description(self, description: str) -> EpicBuilder:
         """Add description section."""
         description_section(self, description)
         return self
@@ -62,34 +62,34 @@ class EpicBuilder(TypedBuilder):
         requirements: list[str],
         code_example: str | None = None,
         code_language: str = "python",
-    ) -> "EpicBuilder":
+    ) -> EpicBuilder:
         """Add technical details section with requirements list."""
         implementation_details_section(self, requirements)
         if code_example:
             self._content.append(CodeBlock(code_example, code_language))
         return self
 
-    def add_acceptance_criteria(self, criteria: list[str]) -> "EpicBuilder":
+    def add_acceptance_criteria(self, criteria: list[str]) -> EpicBuilder:
         """Add acceptance criteria section."""
         acceptance_criteria_section(self, criteria)
         return self
 
-    def add_edge_cases(self, edge_cases: list[str]) -> "EpicBuilder":
+    def add_edge_cases(self, edge_cases: list[str]) -> EpicBuilder:
         """Add edge cases section."""
         edge_cases_section(self, edge_cases)
         return self
 
-    def add_testing_considerations(self, test_cases: list[str]) -> "EpicBuilder":
+    def add_testing_considerations(self, test_cases: list[str]) -> EpicBuilder:
         """Add testing considerations section."""
         testing_considerations_section(self, test_cases)
         return self
 
-    def add_out_of_scope(self, items: list[str]) -> "EpicBuilder":
+    def add_out_of_scope(self, items: list[str]) -> EpicBuilder:
         """Add out-of-scope section to clarify boundaries."""
         out_of_scope_section(self, items)
         return self
 
-    def add_success_metrics(self, metrics: list[str]) -> "EpicBuilder":
+    def add_success_metrics(self, metrics: list[str]) -> EpicBuilder:
         """Add success metrics section."""
         success_metrics_section(self, metrics)
         return self

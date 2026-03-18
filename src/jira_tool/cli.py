@@ -511,9 +511,9 @@ def types(project: str) -> None:
             console.print(f"[yellow]No issue types found for project {project}[/yellow]")
             return
 
-        from jira_tool.document.builders.profiles import TYPE_PROFILES
-
         from rich.table import Table
+
+        from jira_tool.document.builders.profiles import TYPE_PROFILES
 
         table = Table(title=f"Issue Types — {project}")
         table.add_column("Name", style="cyan", no_wrap=True)
@@ -1359,11 +1359,7 @@ def setup() -> None:
                 console.print(f"  {key}: {mask_sensitive(info['value'], key)} ({info['source']})")
         console.print()
 
-        if not Prompt.ask(
-            "Do you want to reconfigure?",
-            choices=["y", "n"],
-            default="n",
-        ) == "y":
+        if Prompt.ask("Do you want to reconfigure?", choices=["y", "n"], default="n") != "y":
             console.print("[dim]Setup cancelled.[/dim]")
             return
 

@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner
-
 from jira_tool.cli import jira
 
 

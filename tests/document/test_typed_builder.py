@@ -1,7 +1,6 @@
 """Tests for TypedBuilder."""
 
 import pytest
-
 from jira_tool.document.builders.typed import TypedBuilder
 
 
