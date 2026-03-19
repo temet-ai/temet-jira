@@ -8,6 +8,7 @@ from jira_tool.document.display.formatters import (
     truncate_summary,
 )
 from jira_tool.document.display.panels import (
+    IssueHeaderBuilder,
     IssuePanelBuilder,
     format_issue,
 )
@@ -28,6 +29,7 @@ __all__ = [
     "get_user_display",
     "truncate_summary",
     # Panels
+    "IssueHeaderBuilder",
     "IssuePanelBuilder",
     "format_issue",
     # Tables

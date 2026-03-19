@@ -56,6 +56,23 @@ class StateDurationAnalyzer:
         # Implementation will be added in later tasks
         raise NotImplementedError("State analysis implementation pending")
 
+    def analyze_issues_business_hours(
+        self,
+        issues: list[dict[str, Any]],
+        timezone: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """Analyze state durations for multiple issues using business hours.
+
+        Args:
+            issues: List of Jira issue data with expanded changelog.
+            timezone: Optional timezone string for business hours calculation.
+
+        Returns:
+            List of dictionaries containing analysis results for each issue.
+        """
+        # Delegate to analyze_issues — business hours are always calculated
+        return self.analyze_issues(issues)
+
     def analyze_issues(
         self,
         issues: list[dict[str, Any]],

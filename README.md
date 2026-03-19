@@ -2,7 +2,7 @@
 
 A comprehensive Jira API client and CLI tool for interacting with Jira Cloud instances.
 Useful to automate workflows, create rich ADF content, and analyze workflow state durations.
-Use it to in your agents / prompts / instructions for AI agents, or build automation scripts.
+Use it in your agents / prompts / instructions for AI agents, or build automation scripts.
 
 ## Table of Contents
 
@@ -11,9 +11,12 @@ Use it to in your agents / prompts / instructions for AI agents, or build automa
   - [Installation](#installation)
   - [Configuration](#configuration)
   - [First Commands](#first-commands)
-- [Usage](#usage)
-  - [Command Line](#command-line)
-  - [Python API](#python-api)
+- [CLI Commands](#cli-commands)
+- [Claude Code Integration](#claude-code-integration)
+  - [Slash Commands](#slash-commands)
+  - [Skills](#skills)
+  - [Prompts](#prompts)
+- [Python API](#python-api)
 - [Documentation](#documentation)
 - [Development](#development)
 - [Requirements](#requirements)
@@ -29,7 +32,7 @@ Use it to in your agents / prompts / instructions for AI agents, or build automa
 - **Workflow Analysis** - Analyze state durations and bottlenecks for retrospectives
 - **Epic & Sprint Management** - Retrieve epics with children, filter by sprint, group by assignee/status
 - **JQL Support** - Advanced filtering for complex queries and batch operations
-- **Claude Code Integration** - Works with prompts in `.github/` for ticket retrieval, parsing, and planning workflows
+- **Claude Code Integration** - Skills, slash commands, and prompts for AI-assisted workflows
 
 ## Quick Start
 
@@ -67,18 +70,28 @@ See [scripts/README.md](scripts/README.md) for more installation options.
 
 ### Configuration
 
-Set up your Jira credentials:
+Run the interactive setup wizard:
 
 ```bash
-# Required environment variables
+jira-tool setup
+```
+
+This will guide you through:
+1. Entering your Jira URL
+2. Your email address
+3. API token (get one at https://id.atlassian.com/manage-profile/security/api-tokens)
+4. Optional default project
+
+Configuration is saved to `~/.config/jira-tool/config.yaml`.
+
+**Alternative:** Set environment variables in your shell profile:
+```bash
 export JIRA_BASE_URL="https://your-company.atlassian.net"
 export JIRA_USERNAME="your-email@example.com"
 export JIRA_API_TOKEN="your-api-token"
 ```
 
-**Get API token:** https://id.atlassian.com/manage-profile/security/api-tokens
-
-See **[Setup Guide](docs/guides/jira_setup.md)** for detailed instructions including `.env` file setup, token generation, troubleshooting, and security best practices.
+See **[Getting Started](docs/guides/getting_started.md)** for detailed setup instructions.
 
 ### First Commands
 
@@ -90,7 +103,7 @@ jira-tool get PROJ-123
 jira-tool search "project = PROJ AND status = Open"
 
 # Create a task
-jira-tool create --summary "Fix login bug" --type Task
+jira-tool create --project PROJ --type Task --summary "Fix login bug"
 
 # Export to CSV
 jira-tool export --project PROJ --format csv -o tickets.csv
@@ -99,25 +112,81 @@ jira-tool export --project PROJ --format csv -o tickets.csv
 jira-tool export --assignee "me" --status "In Progress"
 ```
 
-## Usage
+## CLI Commands
 
-### Command Line
+| Command | Description |
+|---------|-------------|
+| `setup` | Interactive setup wizard |
+| `config` | View and manage configuration |
+| `get` | Get details of a Jira issue |
+| `search` | Search for issues using JQL |
+| `create` | Create a new issue with ADF formatting |
+| `update` | Update issue fields or transition status |
+| `comment` | Add a comment to an issue |
+| `transitions` | Show available status transitions |
+| `epics` | List all epics in a project |
+| `epic-details` | Get epic details with child issues |
+| `export` | Export issues with filtering (JSON, CSV, JSONL) |
+| `analyze` | Analyze workflow state durations |
 
-The CLI provides 10+ commands for issue operations (get, create, update, comment, transitions), search with JQL, epic management, data export in multiple formats (table, JSON, CSV, JSONL), and workflow state analysis. Designed for both interactive use and automation/agent workflows.
-
-**Quick examples:**
+**Examples:**
 ```bash
 jira-tool get PROJ-123                          # Get issue details
 jira-tool search "status = 'In Progress'"       # Search with JQL
+jira-tool create --project PROJ --type Epic --summary "New feature"
+jira-tool update PROJ-123 --status "Done"       # Transition status
 jira-tool export --assignee "me" --format csv   # Export your tickets
 jira-tool analyze state-durations issues.json   # Workflow analysis
 ```
 
-**See:** [CLI Reference](docs/reference/cli_reference.md) for all commands and [Usage Guide](docs/guides/usage_guide.md) for workflows and examples.
+**See:** [CLI Reference](docs/reference/cli_reference.md) for all commands and [Usage Guide](docs/guides/usage_guide.md) for workflows.
 
-### Python API
+## Claude Code Integration
 
-The Python API provides `JiraClient` for all Jira operations, document builders (`IssueBuilder`, `EpicBuilder`, `JiraDocumentBuilder`) for creating ADF-formatted content, and `StateDurationAnalyzer` for workflow analysis. Use it to build automation scripts, integrate with other tools, or create custom workflows for AI agents.
+This project includes full Claude Code support with slash commands, skills, and prompts for AI-assisted Jira workflows.
+
+### Slash Commands
+
+Available in `.claude/commands/` - use with `/command-name` in Claude Code:
+
+| Command | Description |
+|---------|-------------|
+| `/get PROJ-123` | Get ticket details |
+| `/search "JQL query"` | Search with JQL |
+| `/create --project PROJ ...` | Create an issue |
+| `/update PROJ-123 --status "Done"` | Update an issue |
+| `/comment PROJ-123 "message"` | Add a comment |
+| `/export --project PROJ ...` | Export issues |
+| `/epics --project PROJ` | List epics |
+| `/epic-details PROJ-123` | Epic with children |
+| `/transitions PROJ-123` | Show transitions |
+
+### Skills
+
+Available in `.claude/skills/` - reference guides for Claude:
+
+| Skill | Description |
+|-------|-------------|
+| `jira-api` | Jira REST API v3 documentation, endpoints, JQL patterns |
+| `jira-builders` | CLI usage guide and best practices |
+| `build-jira-document-format` | ADF builder patterns with EpicBuilder/IssueBuilder |
+| `work-with-adf` | Atlassian Document Format creation and validation |
+
+### Prompts
+
+GitHub Copilot-style prompts in `.github/prompts/` for complex workflows:
+
+| Prompt | Description |
+|--------|-------------|
+| `jira-ticket-retriever` | Fetch and archive tickets to artifact directories |
+| `jira-task-parser` | Transform tickets into implementation plans |
+| `jira-orchestration-lead` | Coordinate retrieval, parsing, and planning |
+
+**Workflow Guide:** See `.github/instructions/jira-workflow-guide.instructions.md` for when to use each prompt.
+
+## Python API
+
+The Python API provides `JiraClient` for all Jira operations, document builders (`IssueBuilder`, `EpicBuilder`, `JiraDocumentBuilder`) for creating ADF-formatted content, and `StateDurationAnalyzer` for workflow analysis.
 
 **Quick example:**
 ```python
@@ -139,29 +208,26 @@ client.create_issue({
 })
 ```
 
-**See:** [Python API Guide](docs/guides/python_api_guide.md) for complete API documentation with examples.
+**See:** [Python API Guide](docs/guides/python_api_guide.md) for complete API documentation.
 
 ## Documentation
 
 ### Guides
 
-- **[Setup Guide](docs/guides/jira_setup.md)** - Configure Jira credentials with environment variables or `.env` files, generate API tokens, troubleshoot connection issues, and follow security best practices.
-
-- **[Usage Guide](docs/guides/usage_guide.md)** - Common workflows including daily standup prep, sprint planning, bug triage, epic management, data export strategies, workflow analysis, and automation tips.
-
-- **[Python API Guide](docs/guides/python_api_guide.md)** - Complete API reference for `JiraClient`, document builders, state analysis, error handling, and real-world examples for automation.
-
-- **[Formatting Guide](docs/guides/jira_formatting_guide.md)** - Create rich Atlassian Document Format (ADF) content with headings, lists, code blocks, panels, and formatting.
+- **[Getting Started](docs/guides/getting_started.md)** - Quick 5-minute setup and first commands
+- **[Setup Guide](docs/guides/jira_setup.md)** - Detailed configuration, API tokens, troubleshooting
+- **[Usage Guide](docs/guides/usage_guide.md)** - Common workflows, sprint planning, data export
+- **[Python API Guide](docs/guides/python_api_guide.md)** - Complete API reference with examples
+- **[Formatting Guide](docs/guides/jira_formatting_guide.md)** - Create rich ADF content
 
 ### Reference
 
-- **[CLI Reference](docs/reference/cli_reference.md)** - Complete command documentation with all options, arguments, JQL patterns, output formats, and common use cases.
-
-- **[ADF Reference](docs/reference/adf_reference_guide.md)** - Atlassian Document Format structure, node types, and formatting reference.
+- **[CLI Reference](docs/reference/cli_reference.md)** - Complete command documentation
+- **[ADF Reference](docs/reference/adf_reference_guide.md)** - Atlassian Document Format structure
 
 ### Examples
 
-- **[examples/create_issue_with_proper_formatting.py](examples/create_issue_with_proper_formatting.py)** - Demonstrates `IssueBuilder` and `EpicBuilder` with comprehensive examples.
+- **[examples/create_issue_with_proper_formatting.py](examples/create_issue_with_proper_formatting.py)** - IssueBuilder and EpicBuilder examples
 
 ## Development
 
@@ -196,6 +262,12 @@ jira-tool/
 │   ├── formatter.py         # Document builders
 │   ├── cli.py               # CLI commands
 │   └── analysis/            # State analysis
+├── .claude/                 # Claude Code integration
+│   ├── commands/            # Slash commands (/get, /search, etc.)
+│   └── skills/              # Reference skills (jira-api, etc.)
+├── .github/                 # GitHub integration
+│   ├── prompts/             # AI prompts for workflows
+│   └── instructions/        # Workflow guides
 ├── docs/                    # Documentation
 │   ├── guides/              # User guides
 │   └── reference/           # API reference
@@ -204,31 +276,13 @@ jira-tool/
 └── scripts/                 # Build and install scripts
 ```
 
-### Running Tests
-
-```bash
-# All tests
-uv run pytest
-
-# Specific test file
-uv run pytest tests/test_client.py
-
-# Specific test function
-uv run pytest tests/test_client.py::test_get_issue
-
-# With coverage report
-uv run pytest --cov=jira_tool --cov-report=html
-```
-
 ### Code Quality
 
 The project enforces:
 - **Black** for code formatting
 - **Ruff** for linting
 - **MyPy** for type checking (strict mode)
-- **Pytest** for testing (>80% coverage)
-
-Always run linting and tests before committing:
+- **Pytest** for testing
 
 ```bash
 # Format, lint, and test
@@ -257,7 +311,7 @@ For issues and questions:
 ---
 
 **Quick Links:**
-- [Getting Started](docs/guides/jira_setup.md)
+- [Getting Started](docs/guides/getting_started.md)
 - [Command Reference](docs/reference/cli_reference.md)
 - [Python API](docs/guides/python_api_guide.md)
 - [Examples](examples/)

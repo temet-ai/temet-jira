@@ -359,3 +359,726 @@ class TestExtractTextFromAdfEdgeCases:
         }
         result = extract_text_from_adf(doc)
         assert "5. Fifth item" in result
+
+
+class TestExtractTextInlineHandlers:
+    """Tests for newly added inline node handlers."""
+
+    def test_hard_break_produces_newline(self) -> None:
+        """hardBreak node should produce a newline character."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {"type": "text", "text": "Line one"},
+                        {"type": "hardBreak"},
+                        {"type": "text", "text": "Line two"},
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "Line one\nLine two" in result
+
+    def test_mention_with_text(self) -> None:
+        """mention node with attrs.text shows @Name."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {
+                            "type": "mention",
+                            "attrs": {"id": "abc123", "text": "John Doe"},
+                        }
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "@John Doe" in result
+
+    def test_mention_with_at_prefix_not_doubled(self) -> None:
+        """mention whose text already starts with @ should not double-prefix."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {"type": "mention", "attrs": {"text": "@Alice"}}
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "@Alice" in result
+        assert "@@Alice" not in result
+
+    def test_mention_missing_text(self) -> None:
+        """mention without attrs.text shows @unknown."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {"type": "mention", "attrs": {"id": "abc123"}}
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "@unknown" in result
+
+    def test_date_timestamp_to_yyyy_mm_dd(self) -> None:
+        """date node converts millis timestamp to YYYY-MM-DD."""
+        # 1700000000000 ms = 2023-11-14 UTC
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {"type": "date", "attrs": {"timestamp": "1700000000000"}}
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "2023-11-14" in result
+
+    def test_date_missing_timestamp(self) -> None:
+        """date node without timestamp shows placeholder."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [{"type": "date", "attrs": {}}],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "(no date)" in result
+
+    def test_status_wraps_in_brackets(self) -> None:
+        """status node wraps attrs.text in square brackets."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {"type": "status", "attrs": {"text": "IN PROGRESS", "color": "blue"}}
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "[IN PROGRESS]" in result
+
+    def test_status_missing_text(self) -> None:
+        """status without text shows [status] fallback."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [{"type": "status", "attrs": {}}],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "[status]" in result
+
+    def test_inline_card_renders_url(self) -> None:
+        """inlineCard renders the attrs.url."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {
+                            "type": "inlineCard",
+                            "attrs": {"url": "https://example.com/page"},
+                        }
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "https://example.com/page" in result
+
+    def test_inline_card_missing_url(self) -> None:
+        """inlineCard without url shows (link) fallback."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [{"type": "inlineCard", "attrs": {}}],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "(link)" in result
+
+
+class TestExtractTextBlockHandlers:
+    """Tests for newly added block node handlers."""
+
+    def test_blockquote_prefixes_with_gt(self) -> None:
+        """blockquote child content is prefixed with '> '."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "blockquote",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [{"type": "text", "text": "Quoted text"}],
+                        }
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "> Quoted text" in result
+
+    def test_rule_renders_triple_dash(self) -> None:
+        """rule node renders as ---."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [{"type": "text", "text": "Above"}],
+                },
+                {"type": "rule"},
+                {
+                    "type": "paragraph",
+                    "content": [{"type": "text", "text": "Below"}],
+                },
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "---" in result
+        assert "Above" in result
+        assert "Below" in result
+
+    def test_expand_shows_title_and_content(self) -> None:
+        """expand node shows [title] and child content."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "expand",
+                    "attrs": {"title": "Click to expand"},
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [{"type": "text", "text": "Hidden content"}],
+                        }
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "[Click to expand]" in result
+        assert "Hidden content" in result
+
+    def test_nested_expand_same_as_expand(self) -> None:
+        """nestedExpand uses the same handler as expand."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "nestedExpand",
+                    "attrs": {"title": "Nested section"},
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [{"type": "text", "text": "Inner text"}],
+                        }
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "[Nested section]" in result
+        assert "Inner text" in result
+
+    def test_table_rows_with_pipe_separators(self) -> None:
+        """table renders rows with | separators."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "table",
+                    "attrs": {"layout": "default"},
+                    "content": [
+                        {
+                            "type": "tableRow",
+                            "content": [
+                                {
+                                    "type": "tableHeader",
+                                    "content": [
+                                        {
+                                            "type": "paragraph",
+                                            "content": [{"type": "text", "text": "Name"}],
+                                        }
+                                    ],
+                                },
+                                {
+                                    "type": "tableHeader",
+                                    "content": [
+                                        {
+                                            "type": "paragraph",
+                                            "content": [{"type": "text", "text": "Value"}],
+                                        }
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            "type": "tableRow",
+                            "content": [
+                                {
+                                    "type": "tableCell",
+                                    "content": [
+                                        {
+                                            "type": "paragraph",
+                                            "content": [{"type": "text", "text": "Foo"}],
+                                        }
+                                    ],
+                                },
+                                {
+                                    "type": "tableCell",
+                                    "content": [
+                                        {
+                                            "type": "paragraph",
+                                            "content": [{"type": "text", "text": "Bar"}],
+                                        }
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "| Name | Value |" in result
+        assert "| Foo | Bar |" in result
+
+    def test_media_single_with_alt_text(self) -> None:
+        """mediaSingle with alt text shows [image: alt]."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "mediaSingle",
+                    "attrs": {"layout": "center"},
+                    "content": [
+                        {
+                            "type": "media",
+                            "attrs": {
+                                "type": "file",
+                                "id": "abc-123",
+                                "alt": "screenshot",
+                            },
+                        }
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "[image: screenshot]" in result
+
+    def test_media_group_without_alt(self) -> None:
+        """mediaGroup without alt shows [attachment]."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "mediaGroup",
+                    "content": [
+                        {
+                            "type": "media",
+                            "attrs": {"type": "file", "id": "xyz-789"},
+                        }
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "[attachment]" in result
+
+
+class TestExtractTextBugFixesAndFallbacks:
+    """Tests for bug fixes and unknown leaf fallback behaviour."""
+
+    def test_list_item_with_mention_and_text(self) -> None:
+        """List item paragraph with text AND mention extracts both.
+
+        This tests the bug fix where the old code only extracted direct text
+        children of list items, missing inline nodes like mentions and links.
+        """
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "bulletList",
+                    "content": [
+                        {
+                            "type": "listItem",
+                            "content": [
+                                {
+                                    "type": "paragraph",
+                                    "content": [
+                                        {"type": "text", "text": "Assigned to "},
+                                        {
+                                            "type": "mention",
+                                            "attrs": {"id": "u1", "text": "Bob"},
+                                        },
+                                        {"type": "text", "text": " for review"},
+                                    ],
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "Assigned to" in result
+        assert "@Bob" in result
+        assert "for review" in result
+
+    def test_unknown_node_with_attrs_text(self) -> None:
+        """Unknown leaf node with attrs.text extracts that text."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {"type": "someNewInlineType", "attrs": {"text": "custom text"}}
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "custom text" in result
+
+    def test_unknown_node_with_attrs_url(self) -> None:
+        """Unknown leaf node with attrs.url extracts the URL."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {
+                            "type": "futureCardType",
+                            "attrs": {"url": "https://new.example.com"},
+                        }
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "https://new.example.com" in result
+
+    def test_unknown_node_no_attrs_does_not_crash(self) -> None:
+        """Unknown leaf node with no attrs returns empty without crashing."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [{"type": "totallyUnknown"}],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        # Should not raise; result may be empty or just whitespace
+        assert isinstance(result, str)
+
+
+class TestRemainingAdfNodeHandlers:
+    """Tests for remaining ADF spec node handlers."""
+
+    def test_list_item_standalone(self) -> None:
+        """listItem outside a list context still extracts content."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [{"type": "text", "text": "standalone item"}],
+                        }
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "standalone item" in result
+
+    def test_media_standalone_with_alt(self) -> None:
+        """Standalone media node with alt text."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "media",
+                    "attrs": {"type": "file", "id": "abc", "alt": "screenshot"},
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "[image: screenshot]" in result
+
+    def test_media_standalone_without_alt(self) -> None:
+        """Standalone media node without alt text."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "media",
+                    "attrs": {"type": "file", "id": "abc"},
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "[attachment]" in result
+
+    def test_media_inline_with_alt(self) -> None:
+        """Inline media with alt text."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {"type": "text", "text": "see "},
+                        {
+                            "type": "mediaInline",
+                            "attrs": {
+                                "type": "file",
+                                "id": "abc",
+                                "alt": "diagram.png",
+                            },
+                        },
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "diagram.png" in result
+
+    def test_media_inline_without_alt(self) -> None:
+        """Inline media without alt shows [attachment]."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {
+                            "type": "mediaInline",
+                            "attrs": {"type": "file", "id": "abc"},
+                        },
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "[attachment]" in result
+
+    def test_table_row_standalone(self) -> None:
+        """tableRow outside table context still renders cells."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "tableRow",
+                    "content": [
+                        {
+                            "type": "tableCell",
+                            "content": [
+                                {
+                                    "type": "paragraph",
+                                    "content": [{"type": "text", "text": "A"}],
+                                }
+                            ],
+                        },
+                        {
+                            "type": "tableCell",
+                            "content": [
+                                {
+                                    "type": "paragraph",
+                                    "content": [{"type": "text", "text": "B"}],
+                                }
+                            ],
+                        },
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "A" in result
+        assert "B" in result
+        assert "|" in result
+
+    def test_table_cell_standalone(self) -> None:
+        """tableCell outside table extracts content."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "tableCell",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [{"type": "text", "text": "cell content"}],
+                        }
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "cell content" in result
+
+    def test_table_header_standalone(self) -> None:
+        """tableHeader outside table extracts content."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "tableHeader",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {"type": "text", "text": "header content"}
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "header content" in result
+
+    def test_multi_bodied_extension_with_key(self) -> None:
+        """multiBodiedExtension shows extensionKey and recurses content."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "multiBodiedExtension",
+                    "attrs": {"extensionKey": "tabs"},
+                    "content": [
+                        {
+                            "type": "extensionFrame",
+                            "content": [
+                                {
+                                    "type": "paragraph",
+                                    "content": [
+                                        {"type": "text", "text": "tab content"}
+                                    ],
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "tabs" in result
+        assert "tab content" in result
+
+    def test_multi_bodied_extension_without_key(self) -> None:
+        """multiBodiedExtension without key still extracts content."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "multiBodiedExtension",
+                    "attrs": {},
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {"type": "text", "text": "ext content"}
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "ext content" in result
+
+    def test_extension_frame(self) -> None:
+        """extensionFrame recurses content."""
+        doc = {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "extensionFrame",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {"type": "text", "text": "frame text"}
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+        result = extract_text_from_adf(doc)
+        assert "frame text" in result

@@ -88,6 +88,33 @@ uv run mypy src/
 
 **Important:** Always run linting and tests after making code changes. The project enforces strict type checking with `disallow_untyped_defs = true`.
 
+### Install vs Development
+
+This tool is installed as a **uv global tool**. There are two execution modes:
+
+| Mode | Command | When to use |
+|------|---------|-------------|
+| Development | `uv run jira-tool [command]` | During coding — picks up edits instantly |
+| Installed binary | `jira-tool [command]` | What users actually run — requires rebuild |
+
+**After any code change that needs to be in the installed binary:**
+```bash
+uv build && uv tool install . --force --refresh-package jira-tool
+```
+
+**DO NOT** use `uv pip install -e .` — this is WRONG for this project. Changes will NOT affect the `jira-tool` binary.
+
+**Critical:** Never declare a CLI change "done" without rebuilding. Tests pass against development code; users run the installed binary.
+
+### Done Checklist
+
+Before declaring ANY CLI work complete, follow this sequence:
+
+1. Tests pass: `uv run python -m pytest tests/ -x -q`
+2. Rebuild tool: `uv build && uv tool install . --force --refresh-package jira-tool`
+3. Run real command: `jira-tool <command> <real-args>` and inspect output
+4. For format changes: compare output against Jira web UI to confirm nothing is missing
+
 ## Architecture
 
 ### Core Components
@@ -115,6 +142,16 @@ uv run mypy src/
 - Commands: `get`, `search`, `create`, `update`, `comment`, `transitions`, `epics`, `epic-details`, `export`
 - Subgroup: `analyze state-durations` for workflow analysis
 - Supports `--format` (table/json/csv/jsonl) and `--output` for file export
+
+### ADF Extractor (`src/jira_tool/document/adf/extractor.py`)
+
+When modifying the ADF extractor:
+
+1. Reference the [Atlassian ADF spec](https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/) before declaring complete
+2. Compare implemented handlers against all node types in the spec
+3. Unknown nodes must never silently drop content — use the fallback chain: `node.text` → `attrs.text` → `attrs.url` → log debug
+4. After rebuild, run `jira-tool get <real-issue-key>` against a real Jira issue with rich content and inspect the description output
+5. "Tests pass" is not sufficient — ADF content from real Jira issues is more varied than test fixtures
 
 ## Available Slash Commands
 

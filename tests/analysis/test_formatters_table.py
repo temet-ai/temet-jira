@@ -139,7 +139,7 @@ class TestFormatAsTable:
         with pytest.raises(
             NotImplementedError, match="Table formatting implementation pending"
         ):
-            format_as_table([], _max_width=80)
+            format_as_table([], max_width=80)
 
     # These tests are placeholders for when the table formatter is implemented
     @pytest.mark.skip(reason="Table formatter not yet implemented")

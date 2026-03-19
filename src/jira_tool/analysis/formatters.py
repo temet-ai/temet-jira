@@ -359,7 +359,7 @@ def format_as_csv(
 
 
 def format_as_table(
-    _analysis_results: list[dict[str, Any]], _max_width: int | None = None
+    _analysis_results: list[dict[str, Any]], max_width: int | None = None
 ) -> str:
     """Format state duration analysis results as a text table.
 
