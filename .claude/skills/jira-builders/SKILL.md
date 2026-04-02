@@ -2,14 +2,16 @@
 name: jira-builders
 description: |
   Guide for using jira-tool CLI correctly to create and manage Jira tickets with rich formatting.
-  Use when working with Jira tickets, epics, or exports. Triggers on "create Jira ticket",
-  "search Jira", "get Jira ticket", "export Jira data", "list epics", or any Jira API operations.
-  Prevents common mistakes like trying to import jira_tool Python module or using curl unnecessarily.
+  Use when working with Jira tickets, epics, risks, or exports. Triggers on "create Jira ticket",
+  "create risk issue", "search Jira", "get Jira ticket", "export Jira data", "list epics",
+  "risk assessment", or any Jira API operations. Supports typed issue creation via TypedBuilder
+  with 4 profiles: epic, risk, sub-task, and default (Task/Story/Bug). Prevents common mistakes
+  like trying to import jira_tool Python module or using curl unnecessarily.
   Works with jira-tool CLI command and environment variables (JIRA_BASE_URL, JIRA_USERNAME, JIRA_API_TOKEN).
 category: jira-atlassian
 difficulty: beginner
-tags: [jira, cli, tickets, epics, formatting]
-version: 1.0.0
+tags: [jira, cli, tickets, epics, risks, formatting, typed-builder]
+version: 1.1.0
 ---
 
 # Jira Ticket Management
@@ -40,6 +42,73 @@ jira-tool create --project PROJ --type Sub-task --summary "Title" --parent PROJ-
 # Export for analysis
 jira-tool export --project PROJ --all --format jsonl -o data.jsonl
 ```
+
+## Typed Issue Creation (TypedBuilder Profiles)
+
+The CLI uses `TypedBuilder` internally to format descriptions based on issue type.
+Four type profiles are available, each with distinct header fields and sections:
+
+| Profile | Issue Types | Header Fields | Panel Style |
+|---------|-----------|---------------|-------------|
+| **epic** | Epic | priority, dependencies, services | warning |
+| **risk** | Risk | likelihood, impact, overall_risk | warning |
+| **sub-task** | Sub-task | parent, estimated_hours | info |
+| **_default** | Task, Story, Bug, etc. | component, story_points, epic | info |
+
+### Creating Risk Issues (CLI)
+
+```bash
+# Basic risk issue
+jira-tool create --project PROJ --type Risk \
+  --summary "CVE-2024-1234 in base image" \
+  --description "Critical vulnerability found in production container base image"
+
+# Risk issue with heredoc for detailed description
+jira-tool create --project PROJ --type Risk \
+  --summary "Third-party API rate limit exposure" \
+  --description "$(cat <<'EOF'
+Payment gateway API has undocumented rate limits that could cause
+transaction failures during peak traffic periods.
+EOF
+)"
+```
+
+### Creating Risk Issues (Programmatic — TypedBuilder)
+
+For richer risk documents with all risk-specific sections, use the Python API:
+
+```python
+from jira_tool.document import TypedBuilder
+
+builder = TypedBuilder("risk", "CVE-2024-1234 in base image",
+                       likelihood="Medium", impact="High", overall_risk="High")
+builder.add_section("description", text="Critical CVE in production container base image")
+builder.add_section("risk_assessment", likelihood="Medium", impact="High", overall="High")
+builder.add_section("mitigation", strategies=[
+    "Upgrade base image to patched version",
+    "Enable runtime vulnerability scanning",
+    "Add image signing to CI pipeline",
+])
+builder.add_section("acceptance_rationale",
+    rationale="Risk accepted for 48h while patch is validated in staging")
+builder.add_section("acceptance_criteria", criteria=[
+    "Patched image deployed to all environments",
+    "No new CVEs above MEDIUM severity",
+    "Vulnerability scan passes in CI",
+])
+builder.add_section("monitoring_plan", steps=[
+    "Daily vulnerability scan of running containers",
+    "Alert on any new HIGH/CRITICAL CVEs",
+    "Weekly review of patch status",
+])
+adf = builder.build()
+```
+
+**Risk profile sections:** `description`, `risk_assessment`, `mitigation`,
+`acceptance_rationale`, `acceptance_criteria`, `monitoring_plan`
+
+**MCP gap:** The MCP server (`create_issue` tool) only builds plain-text ADF.
+For rich typed documents, use the CLI or programmatic `TypedBuilder` API.
 
 ## Rich Descriptions
 

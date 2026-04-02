@@ -2,25 +2,27 @@
 name: build-jira-document-format
 description: |
   Creates complex ADF (Atlassian Document Format) documents using builder patterns, fluent APIs,
-  and specialized templates for epics, bugs, and feature requests. Use when creating sophisticated
-  Jira descriptions, epics with structure, or rich content documents. Provides EpicBuilder and
-  IssueBuilder classes with method chaining, nested structures, and pre-built templates.
+  and specialized templates for epics, risks, bugs, and feature requests. Use when creating
+  sophisticated Jira descriptions, risk assessments, epics with structure, or rich content
+  documents. Provides TypedBuilder with 4 type profiles (epic, risk, sub-task, _default),
+  plus EpicBuilder and IssueBuilder for method chaining and pre-built templates.
 
   Trigger keywords: "ADF template", "document builder", "complex description", "fluent API",
-  "epic structure", "formatted issue", "rich content", "builder pattern", "EpicBuilder",
-  "IssueBuilder", "document template", "nested content", "advanced formatting".
-Works with Python 3.10+, jira_tool.formatter module, and Jira REST API v3.
+  "epic structure", "risk issue", "risk assessment", "formatted issue", "rich content",
+  "builder pattern", "TypedBuilder", "EpicBuilder", "IssueBuilder", "document template",
+  "nested content", "advanced formatting", "typed builder profiles".
+Works with Python 3.10+, jira_tool.document module, and Jira REST API v3.
 category: jira-atlassian
 difficulty: intermediate
-tags: [jira, adf, builder-pattern, documentation]
-version: 1.0.0
+tags: [jira, adf, builder-pattern, documentation, typed-builder, risk]
+version: 1.1.0
 ---
 
 # Build Jira Document Format (Advanced)
 
 ## Purpose
 
-Master advanced Atlassian Document Format patterns for creating sophisticated, reusable Jira documents. Learn the builder pattern for fluent APIs, create specialized templates (EpicBuilder, IssueBuilder), design complex nested structures, and build document templates that scale from individual issues to epic planning. Transform raw content into professionally formatted Jira documents.
+Master advanced Atlassian Document Format patterns for creating sophisticated, reusable Jira documents. Learn the builder pattern for fluent APIs, use `TypedBuilder` with type profiles (epic, risk, sub-task, _default) for structured documents, create specialized templates (EpicBuilder, IssueBuilder), design complex nested structures, and build document templates that scale from individual issues to epic planning and risk assessments. Transform raw content into professionally formatted Jira documents.
 
 ## Quick Start
 
@@ -214,7 +216,73 @@ For repeated structures, build specialized builders using subclassing or composi
 
 For full implementations, see `references/advanced-patterns.md`.
 
-### Step 4: Extend with Specialized Builders
+### Step 4: Use TypedBuilder for Profile-Based Documents
+
+`TypedBuilder` (in `src/jira_tool/document/builders/typed.py`) composes ADF documents from type profiles. Each profile defines allowed sections, header fields, and display settings.
+
+**4 Type Profiles** (defined in `src/jira_tool/document/builders/profiles.py`):
+
+| Profile | Emoji | Header Fields | Sections |
+|---------|-------|---------------|----------|
+| **epic** | rocket | priority, dependencies, services | description, problem_statement, acceptance_criteria, implementation_details, edge_cases, testing_considerations, out_of_scope, success_metrics |
+| **risk** | warning | likelihood, impact, overall_risk | description, risk_assessment, mitigation, acceptance_rationale, acceptance_criteria, monitoring_plan |
+| **sub-task** | pushpin | parent, estimated_hours | description, steps, done_criteria |
+| **_default** | clipboard | component, story_points, epic | description, implementation_details, acceptance_criteria |
+
+Any unrecognized issue_type falls back to `_default`. Lookup is case-insensitive.
+
+**Example: Risk Issue with TypedBuilder**:
+```python
+from jira_tool.document import TypedBuilder
+
+builder = TypedBuilder("risk", "CVE-2024-1234 in base image",
+                       likelihood="Medium", impact="High", overall_risk="High")
+builder.add_section("description", text="Critical CVE found in production container")
+builder.add_section("risk_assessment", likelihood="Medium", impact="High", overall="High")
+builder.add_section("mitigation", strategies=[
+    "Upgrade base image to patched version",
+    "Enable runtime vulnerability scanning",
+])
+builder.add_section("acceptance_rationale",
+    rationale="Risk accepted for 48h while patch is validated in staging")
+builder.add_section("acceptance_criteria", criteria=[
+    "Patched image deployed to all environments",
+    "Vulnerability scan passes in CI",
+])
+builder.add_section("monitoring_plan", steps=[
+    "Daily vulnerability scan of running containers",
+    "Alert on any new HIGH/CRITICAL CVEs",
+])
+adf = builder.build()
+```
+
+**Example: Epic with TypedBuilder**:
+```python
+builder = TypedBuilder("epic", "Payment System Redesign",
+                       priority="P0", dependencies="Bank API", services="Payments")
+builder.add_section("description", text="Redesign payment processing pipeline")
+builder.add_section("problem_statement", problem="Current system handles only credit cards")
+builder.add_section("acceptance_criteria", criteria=["ACH support live", "Tests pass"])
+adf = builder.build()
+```
+
+**Example: Sub-task with TypedBuilder**:
+```python
+builder = TypedBuilder("sub-task", "Add retry logic",
+                       parent="PROJ-100", estimated_hours="4h")
+builder.add_section("description", text="Implement exponential backoff for API calls")
+builder.add_section("steps", steps=["Add retry decorator", "Configure backoff params", "Add tests"])
+builder.add_section("done_criteria", criteria=["All API calls use retry", "Tests cover failure cases"])
+adf = builder.build()
+```
+
+**Key methods:**
+- `add_section(name, **kwargs)` - Add a section (raises `ValueError` if not in profile)
+- `add_section_optional(name, **kwargs)` - Add section only if in profile (no error)
+
+**MCP gap:** The MCP `create_issue` tool only builds plain-text ADF descriptions. For rich typed documents with sections and panels, use the CLI (`jira-tool create`) or programmatic `TypedBuilder` API.
+
+### Step 5: Extend with Specialized Builders
 
 Create purpose-built builders for complex documents:
 
