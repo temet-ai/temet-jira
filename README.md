@@ -137,32 +137,27 @@ temet-jira analyze state-durations issues.json          # Workflow analysis
 
 ## MCP Server
 
-`temet-jira` ships with a built-in MCP server for Claude Code and other MCP-compatible hosts.
+`temet-jira` ships with a built-in MCP server (`temet-jira-mcp`) compatible with any MCP-enabled client: Claude Code, Cursor, Windsurf, VS Code Copilot, Zed, and others.
 
-**Add to `~/.claude.json`:**
+**Guided setup:**
 
-```json
-{
-  "mcpServers": {
-    "temet-jira": {
-      "command": "temet-jira-mcp",
-      "env": {
-        "JIRA_BASE_URL": "https://your-company.atlassian.net",
-        "JIRA_USERNAME": "your-email@example.com",
-        "JIRA_API_TOKEN": "your-api-token"
-      }
-    }
-  }
-}
+```bash
+temet-jira mcp add
 ```
 
-If `JIRA_BASE_URL`, `JIRA_USERNAME`, and `JIRA_API_TOKEN` are already in your shell environment, you can omit the `env` block.
+This scans your system for existing config files, asks where you want to install, and prints the exact JSON snippet to paste — including the right format for your client.
+
+**List available tools:**
+
+```bash
+temet-jira mcp tools
+```
 
 **Exposed tools:**
 
 | Tool | Description |
 |------|-------------|
-| `get_issue` | Fetch a single issue by key (with optional expand) |
+| `get_issue` | Fetch a single issue by key (supports expand: transitions, changelog) |
 | `search_issues` | Search with JQL, returns paginated results |
 | `create_issue` | Create a new issue with optional description, labels, priority |
 | `update_issue` | Update fields or transition status |
@@ -171,6 +166,8 @@ If `JIRA_BASE_URL`, `JIRA_USERNAME`, and `JIRA_API_TOKEN` are already in your sh
 | `transition_issue` | Move an issue to a new status |
 | `get_epics` | List epics in a project |
 | `get_issue_types` | List available issue types for a project |
+
+**Manual config** (if you prefer): run `temet-jira mcp add` and choose "Other" for a generic snippet you can adapt to any client.
 
 ## Claude Code Integration
 

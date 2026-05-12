@@ -48,7 +48,45 @@ def _get_default_max_results() -> int:
         return 300
 
 
-@click.group(name="jira")
+_SECTIONS: dict[str, list[str]] = {
+    "Configuration": ["setup", "config"],
+    "Reading": ["get", "search", "types"],
+    "Epics": ["epics", "epic-details"],
+    "Creating & Editing": ["create", "update", "comment", "transitions"],
+    "Data & Analysis": ["export", "analyze"],
+    "Integrations": ["mcp"],
+}
+
+_CMD_TO_SECTION: dict[str, str] = {
+    cmd: section for section, cmds in _SECTIONS.items() for cmd in cmds
+}
+
+
+class _SectionedGroup(click.Group):
+    """click.Group that displays commands grouped into labelled sections."""
+
+    def format_commands(self, ctx: click.Context, formatter: click.HelpFormatter) -> None:
+        sections: dict[str, list[tuple[str, str]]] = {s: [] for s in _SECTIONS}
+        sections["Other"] = []
+
+        for name in self.list_commands(ctx):
+            cmd = self.get_command(ctx, name)
+            if cmd is None or cmd.hidden:
+                continue
+            help_text = cmd.get_short_help_str(limit=formatter.width or 80)
+            bucket = _CMD_TO_SECTION.get(name, "Other")
+            if bucket not in sections:
+                sections[bucket] = []
+            sections[bucket].append((name, help_text))
+
+        for section_name, rows in sections.items():
+            if not rows:
+                continue
+            with formatter.section(section_name):
+                formatter.write_dl(rows)
+
+
+@click.group(name="jira", cls=_SectionedGroup)
 def jira() -> None:
     """Jira integration commands."""
     pass
@@ -1593,3 +1631,186 @@ def config_default(ctx: click.Context, *args: Any, **kwargs: Any) -> None:
     """Show config if no subcommand is given."""
     if ctx.invoked_subcommand is None:
         ctx.invoke(config_show)
+
+
+# ---------------------------------------------------------------------------
+# MCP commands
+# ---------------------------------------------------------------------------
+
+# Each entry: (display name, config file path, json_key, snippet_format)
+# snippet_format: "standard" | "vscode" | "zed"
+_MCP_TARGETS: list[tuple[str, str | None, str, str]] = [
+    ("Claude Code — global (~/.claude.json)", "~/.claude.json", "mcpServers", "standard"),
+    ("Claude Code — project (.claude/settings.json)", ".claude/settings.json", "mcpServers", "standard"),
+    ("Cursor — global (~/.cursor/mcp.json)", "~/.cursor/mcp.json", "mcpServers", "standard"),
+    ("Cursor — project (.cursor/mcp.json)", ".cursor/mcp.json", "mcpServers", "standard"),
+    ("Windsurf (~/.codeium/windsurf/mcp_config.json)", "~/.codeium/windsurf/mcp_config.json", "mcpServers", "standard"),
+    ("VS Code / Copilot — project (.vscode/mcp.json)", ".vscode/mcp.json", "servers", "vscode"),
+    ("Zed (~/.config/zed/settings.json)", "~/.config/zed/settings.json", "context_servers", "zed"),
+    ("Other — show generic snippet", None, "mcpServers", "standard"),
+]
+
+
+def _build_snippet(json_key: str, fmt: str, include_env: bool) -> str:
+    env_block = ""
+    if include_env:
+        env_block = (
+            ',\n      "env": {\n'
+            '        "JIRA_BASE_URL": "https://your-company.atlassian.net",\n'
+            '        "JIRA_USERNAME": "your-email@example.com",\n'
+            '        "JIRA_API_TOKEN": "your-api-token"\n'
+            "      }"
+        )
+
+    if fmt == "vscode":
+        inner = (
+            f'"temet-jira": {{\n'
+            f'      "type": "stdio",\n'
+            f'      "command": "temet-jira-mcp"'
+            f"{env_block}\n    }}"
+        )
+    elif fmt == "zed":
+        inner = (
+            '"temet-jira": {\n'
+            '      "command": {\n'
+            '        "path": "temet-jira-mcp",\n'
+            '        "args": []\n'
+            "      }\n    }"
+        )
+    else:
+        inner = (
+            f'"temet-jira": {{\n'
+            f'      "command": "temet-jira-mcp"'
+            f"{env_block}\n    }}"
+        )
+
+    return f'"{json_key}": {{\n    {inner}\n  }}'
+
+
+@jira.group(name="mcp")
+def mcp_cmd() -> None:
+    """Manage MCP server configuration."""
+
+
+@mcp_cmd.command(name="add")
+def mcp_add() -> None:
+    """Print the MCP config snippet for your IDE or AI client.
+
+    Scans common config file locations and guides you to the right snippet.
+    """
+
+    console.print("\n[bold]temet-jira MCP setup[/bold]\n")
+
+    # Detect which config files already exist
+    detected: list[int] = []
+    for i, (_label, path_str, _, _) in enumerate(_MCP_TARGETS[:-1]):
+        if path_str and Path(path_str).expanduser().exists():
+            detected.append(i)
+
+    if detected:
+        console.print("[green]Detected existing config files:[/green]")
+        for i in detected:
+            label, path_str, _, _ = _MCP_TARGETS[i]
+            console.print(f"  [cyan]{i + 1}.[/cyan] {label}")
+        console.print()
+
+    # Build choice list
+    console.print("[bold]Where do you want to install the MCP server?[/bold]")
+    for i, (label, _path_str, _, _) in enumerate(_MCP_TARGETS):
+        exists_marker = " [green](file exists)[/green]" if i in detected else ""
+        console.print(f"  [cyan]{i + 1}.[/cyan] {label}{exists_marker}")
+
+    console.print()
+    raw = Prompt.ask(
+        "Enter number",
+        default=str(detected[0] + 1) if detected else "1",
+    )
+
+    try:
+        choice = int(raw.strip()) - 1
+        if not 0 <= choice < len(_MCP_TARGETS):
+            raise ValueError
+    except ValueError:
+        console.print("[red]Invalid choice.[/red]")
+        raise SystemExit(1) from None
+
+    label, path_str, json_key, fmt = _MCP_TARGETS[choice]
+
+    # Check if env vars are already set
+    has_env = all(
+        os.environ.get(k)
+        for k in ("JIRA_BASE_URL", "JIRA_USERNAME", "JIRA_API_TOKEN")
+    )
+    if has_env:
+        console.print(
+            "\n[green]✓[/green] JIRA_BASE_URL, JIRA_USERNAME, JIRA_API_TOKEN are already set "
+            "in your environment — the [bold]env[/bold] block is optional.\n"
+        )
+        include_env_choice = Prompt.ask(
+            "Include env block in snippet anyway?", choices=["y", "n"], default="n"
+        )
+        include_env = include_env_choice == "y"
+    else:
+        include_env = True
+
+    snippet = _build_snippet(json_key, fmt, include_env)
+
+    # Show target file
+    if path_str:
+        target = Path(path_str).expanduser()
+        exists = target.exists()
+        console.print(f"\n[bold]Target file:[/bold] {target}")
+        if exists:
+            console.print(
+                f"[yellow]↳ File exists — merge the snippet into the "
+                f'existing [cyan]"{json_key}"[/cyan] object.[/yellow]'
+            )
+        else:
+            console.print(
+                "[yellow]↳ File does not exist — create it with the content below.[/yellow]"
+            )
+
+    console.print("\n[bold]Add this to your config:[/bold]\n")
+
+    if path_str and not Path(path_str).expanduser().exists():
+        # Show full file for non-existent files
+        full = "{\n  " + snippet + "\n}"
+        console.print(f"[dim]# {Path(path_str).expanduser()}[/dim]")
+        console.print(full)
+    else:
+        # Show merge snippet only
+        console.print("[dim]# merge into your existing JSON:[/dim]")
+        console.print("{")
+        console.print("  // ... your existing config ...")
+        console.print("  " + snippet.replace("\n", "\n  "))
+        console.print("}")
+
+    console.print(
+        "\n[dim]Run [bold]temet-jira mcp tools[/bold] to see the list of available MCP tools.[/dim]\n"
+    )
+
+
+@mcp_cmd.command(name="tools")
+def mcp_tools() -> None:
+    """List all tools exposed by the temet-jira MCP server."""
+    from rich.table import Table
+
+    table = Table(title="temet-jira MCP Tools", show_header=True, header_style="bold cyan")
+    table.add_column("Tool", style="bold")
+    table.add_column("Description")
+
+    tools = [
+        ("get_issue", "Fetch a single issue by key (supports expand: transitions, changelog)"),
+        ("search_issues", "Search with JQL — returns paginated issue list"),
+        ("create_issue", "Create a new issue with summary, type, description, labels, priority"),
+        ("update_issue", "Update fields or transition status"),
+        ("add_comment", "Add a comment to an issue"),
+        ("get_transitions", "List available status transitions for an issue"),
+        ("transition_issue", "Move an issue to a new status"),
+        ("get_epics", "List epics in a project"),
+        ("get_issue_types", "List available issue types for a project"),
+    ]
+    for name, desc in tools:
+        table.add_row(name, desc)
+
+    console.print(table)
