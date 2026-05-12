@@ -572,7 +572,7 @@ def format_issue(
     if not show_all_fields:
         return
 
-    _KNOWN_CUSTOM_FIELDS = {
+    known_custom_fields = {
         "customfield_10011",  # Epic Name
         "customfield_10014",  # Epic Link
         "customfield_10016",  # Story Points
@@ -597,7 +597,7 @@ def format_issue(
     for key, value in fields.items():
         if not key.startswith("customfield_"):
             continue
-        if key in _KNOWN_CUSTOM_FIELDS:
+        if key in known_custom_fields:
             continue
         if value is None:
             continue

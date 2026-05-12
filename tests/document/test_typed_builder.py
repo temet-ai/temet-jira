@@ -1,6 +1,7 @@
 """Tests for TypedBuilder."""
 
 import pytest
+
 from temet_jira.document.builders.typed import TypedBuilder
 
 

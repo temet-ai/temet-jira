@@ -1,7 +1,7 @@
 """Extract plain text from Atlassian Document Format (ADF) content."""
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -194,7 +194,7 @@ def _handle_date(
     if timestamp is not None:
         try:
             ts = int(timestamp) / 1000
-            dt = datetime.fromtimestamp(ts, tz=timezone.utc)
+            dt = datetime.fromtimestamp(ts, tz=UTC)
             text_parts.append(dt.strftime("%Y-%m-%d"))
         except (ValueError, TypeError, OSError):
             text_parts.append(str(timestamp))

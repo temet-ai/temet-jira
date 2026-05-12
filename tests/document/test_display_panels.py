@@ -316,8 +316,9 @@ class TestIssueHeaderBuilderNewMethods:
 
     def test_add_resolution_present(self, enhanced_issue: dict) -> None:
         """add_resolution adds resolution name when present."""
-        from rich.console import Console as _Console
         from io import StringIO
+
+        from rich.console import Console as _Console
 
         builder = IssueHeaderBuilder(enhanced_issue)
         table = builder.add_resolution().build()
@@ -329,8 +330,9 @@ class TestIssueHeaderBuilderNewMethods:
 
     def test_add_resolution_absent(self, minimal_issue: dict) -> None:
         """add_resolution skips row when resolution is absent."""
-        from rich.console import Console as _Console
         from io import StringIO
+
+        from rich.console import Console as _Console
 
         builder = IssueHeaderBuilder(minimal_issue)
         table = builder.add_resolution().build()
@@ -342,8 +344,9 @@ class TestIssueHeaderBuilderNewMethods:
 
     def test_add_resolution_none(self) -> None:
         """add_resolution skips row when resolution is None."""
-        from rich.console import Console as _Console
         from io import StringIO
+
+        from rich.console import Console as _Console
 
         issue = {
             "key": "TEST-1",
@@ -359,8 +362,9 @@ class TestIssueHeaderBuilderNewMethods:
 
     def test_add_components(self, enhanced_issue: dict) -> None:
         """add_components adds component names when present."""
-        from rich.console import Console as _Console
         from io import StringIO
+
+        from rich.console import Console as _Console
 
         builder = IssueHeaderBuilder(enhanced_issue)
         table = builder.add_components().build()
@@ -372,8 +376,9 @@ class TestIssueHeaderBuilderNewMethods:
 
     def test_add_components_absent(self, minimal_issue: dict) -> None:
         """add_components skips row when components list is empty."""
-        from rich.console import Console as _Console
         from io import StringIO
+
+        from rich.console import Console as _Console
 
         builder = IssueHeaderBuilder(minimal_issue)
         table = builder.add_components().build()
@@ -385,8 +390,9 @@ class TestIssueHeaderBuilderNewMethods:
 
     def test_add_fix_versions(self, enhanced_issue: dict) -> None:
         """add_fix_versions adds version names when present."""
-        from rich.console import Console as _Console
         from io import StringIO
+
+        from rich.console import Console as _Console
 
         builder = IssueHeaderBuilder(enhanced_issue)
         table = builder.add_fix_versions().build()
@@ -398,8 +404,9 @@ class TestIssueHeaderBuilderNewMethods:
 
     def test_add_fix_versions_absent(self, minimal_issue: dict) -> None:
         """add_fix_versions skips row when fixVersions is empty."""
-        from rich.console import Console as _Console
         from io import StringIO
+
+        from rich.console import Console as _Console
 
         builder = IssueHeaderBuilder(minimal_issue)
         table = builder.add_fix_versions().build()
@@ -411,8 +418,9 @@ class TestIssueHeaderBuilderNewMethods:
 
     def test_add_labels(self, enhanced_issue: dict) -> None:
         """add_labels adds labels when present."""
-        from rich.console import Console as _Console
         from io import StringIO
+
+        from rich.console import Console as _Console
 
         builder = IssueHeaderBuilder(enhanced_issue)
         table = builder.add_labels().build()
@@ -424,8 +432,9 @@ class TestIssueHeaderBuilderNewMethods:
 
     def test_add_labels_absent(self, minimal_issue: dict) -> None:
         """add_labels skips row when labels list is empty."""
-        from rich.console import Console as _Console
         from io import StringIO
+
+        from rich.console import Console as _Console
 
         builder = IssueHeaderBuilder(minimal_issue)
         table = builder.add_labels().build()
@@ -437,8 +446,9 @@ class TestIssueHeaderBuilderNewMethods:
 
     def test_add_story_points(self, enhanced_issue: dict) -> None:
         """add_story_points adds customfield_10016 when present."""
-        from rich.console import Console as _Console
         from io import StringIO
+
+        from rich.console import Console as _Console
 
         builder = IssueHeaderBuilder(enhanced_issue)
         table = builder.add_story_points().build()
@@ -450,8 +460,9 @@ class TestIssueHeaderBuilderNewMethods:
 
     def test_add_story_points_none(self, minimal_issue: dict) -> None:
         """add_story_points skips row when customfield_10016 is None."""
-        from rich.console import Console as _Console
         from io import StringIO
+
+        from rich.console import Console as _Console
 
         builder = IssueHeaderBuilder(minimal_issue)
         table = builder.add_story_points().build()
@@ -463,8 +474,9 @@ class TestIssueHeaderBuilderNewMethods:
 
     def test_add_sprint(self, enhanced_issue: dict) -> None:
         """add_sprint shows sprint name and state from customfield_10020."""
-        from rich.console import Console as _Console
         from io import StringIO
+
+        from rich.console import Console as _Console
 
         builder = IssueHeaderBuilder(enhanced_issue)
         table = builder.add_sprint().build()
@@ -477,8 +489,9 @@ class TestIssueHeaderBuilderNewMethods:
 
     def test_add_sprint_absent(self, minimal_issue: dict) -> None:
         """add_sprint skips row when customfield_10020 is absent."""
-        from rich.console import Console as _Console
         from io import StringIO
+
+        from rich.console import Console as _Console
 
         builder = IssueHeaderBuilder(minimal_issue)
         table = builder.add_sprint().build()
@@ -490,8 +503,9 @@ class TestIssueHeaderBuilderNewMethods:
 
     def test_add_parent(self, enhanced_issue: dict) -> None:
         """add_parent shows parent key and summary when present."""
-        from rich.console import Console as _Console
         from io import StringIO
+
+        from rich.console import Console as _Console
 
         builder = IssueHeaderBuilder(enhanced_issue)
         table = builder.add_parent().build()
@@ -504,8 +518,9 @@ class TestIssueHeaderBuilderNewMethods:
 
     def test_add_parent_absent(self, minimal_issue: dict) -> None:
         """add_parent skips row when parent is absent."""
-        from rich.console import Console as _Console
         from io import StringIO
+
+        from rich.console import Console as _Console
 
         builder = IssueHeaderBuilder(minimal_issue)
         table = builder.add_parent().build()
@@ -517,8 +532,9 @@ class TestIssueHeaderBuilderNewMethods:
 
     def test_add_all_standard_includes_new_fields(self, enhanced_issue: dict) -> None:
         """add_all_standard includes resolution, components, fix_versions, labels, story_points, sprint, parent."""
-        from rich.console import Console as _Console
         from io import StringIO
+
+        from rich.console import Console as _Console
 
         builder = IssueHeaderBuilder(enhanced_issue)
         table = builder.add_all_standard().build()
@@ -541,8 +557,9 @@ def _render_all_console_output(mock_console: Any) -> str:
     Rich Table objects need to be rendered through a real Console to extract
     their text content; simple str() on mock call args does not include row data.
     """
-    from rich.console import Console as _Console
     from io import StringIO
+
+    from rich.console import Console as _Console
 
     parts: list[str] = []
     for call in mock_console.print.call_args_list:

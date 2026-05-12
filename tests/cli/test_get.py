@@ -8,7 +8,6 @@ from click.testing import CliRunner
 
 from temet_jira.cli import jira
 
-
 MOCK_ISSUE = {
     "key": "TEST-1",
     "fields": {"summary": "Test", "status": {"name": "Open"}},

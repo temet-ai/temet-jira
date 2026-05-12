@@ -26,7 +26,6 @@ from temet_jira.mcp_server import (
     update_issue,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -580,15 +579,14 @@ class TestClientSingleton:
                 "JIRA_USERNAME": "user@example.com",
                 "JIRA_API_TOKEN": "token",
             },
-        ):
-            with patch("temet_jira.mcp_server.JiraClient") as MockClient:
-                instance = MagicMock()
-                instance.get_issue.return_value = {}
-                instance.get_transitions.return_value = []
-                MockClient.return_value = instance
+        ), patch("temet_jira.mcp_server.JiraClient") as mock_client_cls:
+            instance = MagicMock()
+            instance.get_issue.return_value = {}
+            instance.get_transitions.return_value = []
+            mock_client_cls.return_value = instance
 
-                get_issue("PROJ-1")
-                get_transitions("PROJ-1")
+            get_issue("PROJ-1")
+            get_transitions("PROJ-1")
 
-                # JiraClient constructor called only once
-                assert MockClient.call_count == 1
+            # JiraClient constructor called only once
+            assert mock_client_cls.call_count == 1
