@@ -598,7 +598,7 @@ def create(
     labels: str | None,
     project: str,
 ) -> None:
-    """Create a new issue in Jira with professional formatting."""
+    """Create a new issue in Jira with ADF (Atlassian Document Format) content."""
     try:
         client = JiraClient()
 
