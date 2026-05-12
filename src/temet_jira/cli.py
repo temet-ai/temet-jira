@@ -49,12 +49,11 @@ def _get_default_max_results() -> int:
 
 
 _SECTIONS: dict[str, list[str]] = {
-    "Configuration": ["setup", "config"],
+    "Configuration": ["setup", "config", "mcp"],
     "Reading": ["get", "search", "types"],
     "Epics": ["epics", "epic-details"],
     "Creating & Editing": ["create", "update", "comment", "transitions"],
     "Data & Analysis": ["export", "analyze"],
-    "Integrations": ["mcp"],
 }
 
 _CMD_TO_SECTION: dict[str, str] = {
