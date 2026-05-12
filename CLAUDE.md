@@ -205,6 +205,10 @@ Environment variables (required):
 Optional environment variables:
 - `JIRA_DEFAULT_PROJECT`: Default project key for commands (e.g., `PROJ`)
 - `JIRA_DEFAULT_COMPONENT`: Default component filter for export/search commands (e.g., `"Backend"`)
+- `JIRA_DEFAULT_FORMAT`: Default output format for get/search/export (`table`, `json`, `jsonl`, `csv`)
+- `JIRA_DEFAULT_MAX_RESULTS`: Default max results per query (default: 300)
+
+All optional settings can also be set via `temet-jira config set <key> <value>`.
 
 ## Common Patterns
 

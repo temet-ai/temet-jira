@@ -490,6 +490,19 @@ The tool supports multiple output formats:
 - Supports streaming processing
 - Recommended for exports with 100+ issues
 
+### Setting a Default Format
+
+To avoid typing `--format` every time, set your preferred default:
+
+```bash
+temet-jira config set default_format json
+```
+
+Or via environment variable:
+```bash
+export JIRA_DEFAULT_FORMAT=json
+```
+
 ### Choosing a Format
 
 ```bash
@@ -520,10 +533,19 @@ See [Setup Guide](../guides/jira_setup.md) for complete configuration details.
 **Optional:**
 - `JIRA_DEFAULT_PROJECT` - Default project key
 - `JIRA_DEFAULT_COMPONENT` - Default component filter
-- `JIRA_DEFAULT_EPIC_LABELS` - Default epic labels
-- `JIRA_DEFAULT_ISSUE_LABELS` - Default issue labels
+- `JIRA_DEFAULT_FORMAT` - Default output format: `table`, `json`, `jsonl`, `csv` (default: `table`)
+- `JIRA_DEFAULT_MAX_RESULTS` - Default max results per query (default: 300)
 - `JIRA_REQUEST_TIMEOUT` - Request timeout (seconds)
 - `JIRA_MAX_RETRIES` - Maximum retry attempts
+
+All optional settings can also be managed via the config file:
+
+```bash
+temet-jira config set default_format json     # set default output format
+temet-jira config set project PROJ            # set default project
+temet-jira config set max_results 100         # set default max results
+temet-jira config set component "Backend"     # set default component filter
+```
 
 ---
 

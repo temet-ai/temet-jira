@@ -72,7 +72,8 @@ Configuration is saved to `~/.config/temet-jira/config.yaml`.
 export JIRA_BASE_URL="https://your-company.atlassian.net"
 export JIRA_USERNAME="your-email@example.com"
 export JIRA_API_TOKEN="your-api-token"
-export JIRA_DEFAULT_PROJECT="PROJ"   # optional
+export JIRA_DEFAULT_PROJECT="PROJ"          # optional
+export JIRA_DEFAULT_FORMAT="json"           # optional: table (default), json, jsonl, csv
 ```
 
 Check your current configuration at any time:
