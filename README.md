@@ -137,13 +137,40 @@ temet-jira analyze state-durations issues.json          # Workflow analysis
 
 ## MCP Server
 
-`temet-jira` ships with a built-in MCP server for Claude Code and other MCP-compatible hosts:
+`temet-jira` ships with a built-in MCP server for Claude Code and other MCP-compatible hosts.
 
-```bash
-temet-jira-mcp
+**Add to `~/.claude.json`:**
+
+```json
+{
+  "mcpServers": {
+    "temet-jira": {
+      "command": "temet-jira-mcp",
+      "env": {
+        "JIRA_BASE_URL": "https://your-company.atlassian.net",
+        "JIRA_USERNAME": "your-email@example.com",
+        "JIRA_API_TOKEN": "your-api-token"
+      }
+    }
+  }
+}
 ```
 
-Add it to your `~/.claude.json` MCP configuration to expose Jira tools directly to Claude.
+If `JIRA_BASE_URL`, `JIRA_USERNAME`, and `JIRA_API_TOKEN` are already in your shell environment, you can omit the `env` block.
+
+**Exposed tools:**
+
+| Tool | Description |
+|------|-------------|
+| `get_issue` | Fetch a single issue by key (with optional expand) |
+| `search_issues` | Search with JQL, returns paginated results |
+| `create_issue` | Create a new issue with optional description, labels, priority |
+| `update_issue` | Update fields or transition status |
+| `add_comment` | Add a comment to an issue |
+| `get_transitions` | List available status transitions for an issue |
+| `transition_issue` | Move an issue to a new status |
+| `get_epics` | List epics in a project |
+| `get_issue_types` | List available issue types for a project |
 
 ## Claude Code Integration
 
