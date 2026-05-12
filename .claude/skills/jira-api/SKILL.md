@@ -30,7 +30,7 @@ To get started with the Jira API:
 
 For the project's `JiraClient` class:
 ```python
-from jira_tool.client import JiraClient
+from temet_jira.client import JiraClient
 
 client = JiraClient()
 issue = client.get_issue("PROJ-123")
@@ -283,7 +283,7 @@ Response includes pagination metadata:
 Rich text content (descriptions, comments) uses ADF. The project's `JiraDocumentBuilder` simplifies this:
 
 ```python
-from jira_tool.formatter import JiraDocumentBuilder
+from temet_jira.formatter import JiraDocumentBuilder
 
 doc = JiraDocumentBuilder()
 doc.add_heading("Title", level=1)
@@ -408,7 +408,7 @@ PUT /rest/api/3/issue/PROJ-123
 
 **Create Issue Under Epic**:
 ```python
-from jira_tool.formatter import JiraDocumentBuilder
+from temet_jira.formatter import JiraDocumentBuilder
 
 doc = JiraDocumentBuilder()
 doc.add_paragraph(doc.add_text("Issue description"))
@@ -459,7 +459,7 @@ client.transition_issue("PROJ-123", transition_id)
 
 **Search and Export**:
 ```python
-from jira_tool.analysis.formatters import format_as_csv
+from temet_jira.analysis.formatters import format_as_csv
 
 issues = client.search_issues(
     jql="project = PROJ AND created >= -7d",
@@ -484,7 +484,7 @@ curl -X GET \
 
 Using the project's client:
 ```python
-from jira_tool.client import JiraClient
+from temet_jira.client import JiraClient
 
 client = JiraClient()
 issue = client.get_issue("PROJ-123")
@@ -507,7 +507,7 @@ curl -X GET \
 
 Using the client:
 ```python
-from jira_tool.client import JiraClient
+from temet_jira.client import JiraClient
 
 client = JiraClient()
 issues = client.search_issues(
@@ -524,8 +524,8 @@ for issue in issues:
 
 Create a detailed issue with formatted description:
 ```python
-from jira_tool.client import JiraClient
-from jira_tool.formatter import JiraDocumentBuilder
+from temet_jira.client import JiraClient
+from temet_jira.formatter import JiraDocumentBuilder
 
 client = JiraClient()
 
@@ -561,8 +561,8 @@ print(f"Created issue: {response['key']}")
 
 Use the project's state analyzer to track time in workflow states:
 ```python
-from jira_tool.client import JiraClient
-from jira_tool.analysis.state_analyzer import StateDurationAnalyzer
+from temet_jira.client import JiraClient
+from temet_jira.analysis.state_analyzer import StateDurationAnalyzer
 
 client = JiraClient()
 
@@ -585,7 +585,7 @@ print(csv_output)
 
 Efficiently fetch large result sets:
 ```python
-from jira_tool.client import JiraClient
+from temet_jira.client import JiraClient
 
 client = JiraClient()
 

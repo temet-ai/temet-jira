@@ -1,8 +1,8 @@
-View or manage jira-tool configuration.
+View or manage temet-jira configuration.
 
 Usage: /config [subcommand]
 
-Execute: `jira-tool config $ARGUMENTS`
+Execute: `temet-jira config $ARGUMENTS`
 
 Subcommands:
 - `show` - Display current configuration (default)
@@ -14,9 +14,9 @@ Subcommands:
 
 Examples:
 ```bash
-jira-tool config                      # Show all config
-jira-tool config set project PROJ
-jira-tool config get base_url
+temet-jira config                      # Show all config
+temet-jira config set project PROJ
+temet-jira config get base_url
 ```
 
-Config file: ~/.config/jira-tool/config.yaml
+Config file: ~/.config/temet-jira/config.yaml

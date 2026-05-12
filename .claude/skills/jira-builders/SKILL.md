@@ -1,13 +1,13 @@
 ---
 name: jira-builders
 description: |
-  Guide for using jira-tool CLI correctly to create and manage Jira tickets with rich formatting.
+  Guide for using temet-jira CLI correctly to create and manage Jira tickets with rich formatting.
   Use when working with Jira tickets, epics, risks, or exports. Triggers on "create Jira ticket",
   "create risk issue", "search Jira", "get Jira ticket", "export Jira data", "list epics",
   "risk assessment", or any Jira API operations. Supports typed issue creation via TypedBuilder
   with 4 profiles: epic, risk, sub-task, and default (Task/Story/Bug). Prevents common mistakes
   like trying to import jira_tool Python module or using curl unnecessarily.
-  Works with jira-tool CLI command and environment variables (JIRA_BASE_URL, JIRA_USERNAME, JIRA_API_TOKEN).
+  Works with temet-jira CLI command and environment variables (JIRA_BASE_URL, JIRA_USERNAME, JIRA_API_TOKEN).
 category: jira-atlassian
 difficulty: beginner
 tags: [jira, cli, tickets, epics, risks, formatting, typed-builder]
@@ -16,31 +16,31 @@ version: 1.1.0
 
 # Jira Ticket Management
 
-Use `jira-tool` CLI for all Jira operations.
+Use `temet-jira` CLI for all Jira operations.
 
 ## Core Commands
 
 ```bash
 # Get ticket
-jira-tool get PROJ-370
+temet-jira get PROJ-370
 
 # Search
-jira-tool search 'project=PROJ AND status="To Do"'
+temet-jira search 'project=PROJ AND status="To Do"'
 
 # List epics
-jira-tool epics --project PROJ
+temet-jira epics --project PROJ
 
 # Create epic
-jira-tool create --project PROJ --type Epic --summary "Title"
+temet-jira create --project PROJ --type Epic --summary "Title"
 
 # Create story under epic
-jira-tool create --project PROJ --type Story --summary "Title" --parent PROJ-370
+temet-jira create --project PROJ --type Story --summary "Title" --parent PROJ-370
 
 # Create subtask
-jira-tool create --project PROJ --type Sub-task --summary "Title" --parent PROJ-371
+temet-jira create --project PROJ --type Sub-task --summary "Title" --parent PROJ-371
 
 # Export for analysis
-jira-tool export --project PROJ --all --format jsonl -o data.jsonl
+temet-jira export --project PROJ --all --format jsonl -o data.jsonl
 ```
 
 ## Typed Issue Creation (TypedBuilder Profiles)
@@ -59,12 +59,12 @@ Four type profiles are available, each with distinct header fields and sections:
 
 ```bash
 # Basic risk issue
-jira-tool create --project PROJ --type Risk \
+temet-jira create --project PROJ --type Risk \
   --summary "CVE-2024-1234 in base image" \
   --description "Critical vulnerability found in production container base image"
 
 # Risk issue with heredoc for detailed description
-jira-tool create --project PROJ --type Risk \
+temet-jira create --project PROJ --type Risk \
   --summary "Third-party API rate limit exposure" \
   --description "$(cat <<'EOF'
 Payment gateway API has undocumented rate limits that could cause
@@ -78,7 +78,7 @@ EOF
 For richer risk documents with all risk-specific sections, use the Python API:
 
 ```python
-from jira_tool.document import TypedBuilder
+from temet_jira.document import TypedBuilder
 
 builder = TypedBuilder("risk", "CVE-2024-1234 in base image",
                        likelihood="Medium", impact="High", overall_risk="High")
@@ -115,7 +115,7 @@ For rich typed documents, use the CLI or programmatic `TypedBuilder` API.
 Use heredoc for multi-line descriptions:
 
 ```bash
-jira-tool create --project PROJ --type Epic \
+temet-jira create --project PROJ --type Epic \
   --summary "User Authentication" \
   --description "$(cat <<'EOF'
 Implement OAuth2 authentication with session management.
@@ -133,15 +133,15 @@ EOF
 
 ## Batch Operations
 
-Shell scripts with jira-tool:
+Shell scripts with temet-jira:
 
 ```bash
 #!/bin/bash
-EPIC=$(jira-tool create --project PROJ --type Epic \
+EPIC=$(temet-jira create --project PROJ --type Epic \
   --summary "Parent Epic" --format json | jq -r '.key')
 
 for task in "Task 1" "Task 2" "Task 3"; do
-  jira-tool create --project PROJ --type Story \
+  temet-jira create --project PROJ --type Story \
     --summary "$task" --parent "$EPIC"
 done
 ```
@@ -152,7 +152,7 @@ Export and process with shell tools:
 
 ```bash
 # Export tickets
-jira-tool export --project PROJ --all --format jsonl -o tickets.jsonl
+temet-jira export --project PROJ --all --format jsonl -o tickets.jsonl
 
 # Process with jq
 jq -r 'select(.fields.status.name == "To Do") | .key' tickets.jsonl
@@ -160,14 +160,14 @@ jq -r 'select(.fields.status.name == "To Do") | .key' tickets.jsonl
 
 ## When to Use What
 
-- **Single operation:** `jira-tool` directly
-- **Batch operations:** Shell scripts with `jira-tool` in loops
+- **Single operation:** `temet-jira` directly
+- **Batch operations:** Shell scripts with `temet-jira` in loops
 - **Complex workflows:** Invoke `jira-ticket-manager` agent
 - **Data analysis:** Export + process with jq/awk
 
 ## Requirements
 
-- `jira-tool` CLI installed (check with `jira-tool --version`)
+- `temet-jira` CLI installed (check with `temet-jira --version`)
 - Environment: `JIRA_BASE_URL`, `JIRA_USERNAME`, `JIRA_API_TOKEN`
 
 ## Critical Anti-Patterns to Avoid
@@ -179,7 +179,7 @@ jq -r 'select(.fields.status.name == "To Do") | .key' tickets.jsonl
    from jira_tool import JiraClient
    ```
 
-2. Use curl for Jira API unless jira-tool doesn't support the operation
+2. Use curl for Jira API unless temet-jira doesn't support the operation
    ```bash
    # WRONG - Fragile, error-prone
    curl -u "$JIRA_USERNAME:$JIRA_API_TOKEN" "$JIRA_BASE_URL/rest/api/3/search"
@@ -192,24 +192,24 @@ jq -r 'select(.fields.status.name == "To Do") | .key' tickets.jsonl
    ```
 
 **DO:**
-1. Use jira-tool CLI for all operations
+1. Use temet-jira CLI for all operations
    ```bash
    # RIGHT - Use the CLI
-   jira-tool search 'project=PROJ'
+   temet-jira search 'project=PROJ'
    ```
 
 2. Use subprocess if you need programmatic access
    ```python
    # RIGHT - Call CLI from Python
    import subprocess
-   result = subprocess.run(['jira-tool', 'get', 'PROJ-123'],
+   result = subprocess.run(['temet-jira', 'get', 'PROJ-123'],
                           capture_output=True, text=True)
    ```
 
 3. Use command-line flags for variations
    ```bash
    # RIGHT - One script with options
-   jira-tool export --format csv --filter status=Open -o file.csv
+   temet-jira export --format csv --filter status=Open -o file.csv
    ```
 
 ## Supporting References

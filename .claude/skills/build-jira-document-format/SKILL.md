@@ -11,7 +11,7 @@ description: |
   "epic structure", "risk issue", "risk assessment", "formatted issue", "rich content",
   "builder pattern", "TypedBuilder", "EpicBuilder", "IssueBuilder", "document template",
   "nested content", "advanced formatting", "typed builder profiles".
-Works with Python 3.10+, jira_tool.document module, and Jira REST API v3.
+Works with Python 3.10+, temet_jira.document module, and Jira REST API v3.
 category: jira-atlassian
 difficulty: intermediate
 tags: [jira, adf, builder-pattern, documentation, typed-builder, risk]
@@ -29,7 +29,7 @@ Master advanced Atlassian Document Format patterns for creating sophisticated, r
 Create a formatted epic with problem statement, technical details, and acceptance criteria:
 
 ```python
-from jira_tool.formatter import EpicBuilder
+from temet_jira.formatter import EpicBuilder
 
 # Create epic with builder
 epic = EpicBuilder("Authentication Overhaul", "P0")
@@ -60,7 +60,7 @@ adf = epic.build()
 Or build step-by-step with the general-purpose builder:
 
 ```python
-from jira_tool.formatter import JiraDocumentBuilder
+from temet_jira.formatter import JiraDocumentBuilder
 
 doc = JiraDocumentBuilder()
 doc.add_heading("Epic: Authentication System", 1)
@@ -233,7 +233,7 @@ Any unrecognized issue_type falls back to `_default`. Lookup is case-insensitive
 
 **Example: Risk Issue with TypedBuilder**:
 ```python
-from jira_tool.document import TypedBuilder
+from temet_jira.document import TypedBuilder
 
 builder = TypedBuilder("risk", "CVE-2024-1234 in base image",
                        likelihood="Medium", impact="High", overall_risk="High")
@@ -280,7 +280,7 @@ adf = builder.build()
 - `add_section(name, **kwargs)` - Add a section (raises `ValueError` if not in profile)
 - `add_section_optional(name, **kwargs)` - Add section only if in profile (no error)
 
-**MCP gap:** The MCP `create_issue` tool only builds plain-text ADF descriptions. For rich typed documents with sections and panels, use the CLI (`jira-tool create`) or programmatic `TypedBuilder` API.
+**MCP gap:** The MCP `create_issue` tool only builds plain-text ADF descriptions. For rich typed documents with sections and panels, use the CLI (`temet-jira create`) or programmatic `TypedBuilder` API.
 
 ### Step 5: Extend with Specialized Builders
 
@@ -288,7 +288,7 @@ Create purpose-built builders for complex documents:
 
 **Example: EpicBuilder** (from codebase)
 ```python
-from jira_tool.formatter import EpicBuilder
+from temet_jira.formatter import EpicBuilder
 
 class EpicBuilder:
     """Pre-formatted epic template."""
@@ -371,7 +371,7 @@ See `examples/examples.md` for full working code.
 
 ### Core Requirements
 - **Python 3.10+** (for type hints and dataclass improvements)
-- **jira_tool.formatter module** from this project containing:
+- **temet_jira.formatter module** from this project containing:
   - `JiraDocumentBuilder` - General-purpose builder
   - `EpicBuilder` - Epic-specific template
   - `IssueBuilder` - Issue-specific template

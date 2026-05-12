@@ -2,7 +2,7 @@ Update a Jira issue.
 
 Usage: /update PROJ-123 --status "Done"
 
-Execute: `jira-tool update $ARGUMENTS`
+Execute: `temet-jira update $ARGUMENTS`
 
 Common options:
 - `--status "Done"` - Transition to new status

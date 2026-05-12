@@ -7,8 +7,8 @@
 Create multiple issues as part of an epic with rich descriptions:
 
 ```python
-from jira_tool.client import JiraClient
-from jira_tool.formatter import JiraDocumentBuilder
+from temet_jira.client import JiraClient
+from temet_jira.formatter import JiraDocumentBuilder
 
 client = JiraClient()
 
@@ -59,8 +59,8 @@ for issue_data in issues_data:
 Monitor how long issues spend in each state:
 
 ```python
-from jira_tool.client import JiraClient
-from jira_tool.analysis.state_analyzer import StateDurationAnalyzer
+from temet_jira.client import JiraClient
+from temet_jira.analysis.state_analyzer import StateDurationAnalyzer
 from datetime import datetime
 
 client = JiraClient()
@@ -94,7 +94,7 @@ print("\n" + csv_output)
 Find all high-priority bugs from last week and assign them:
 
 ```python
-from jira_tool.client import JiraClient
+from temet_jira.client import JiraClient
 
 client = JiraClient()
 
@@ -136,8 +136,8 @@ for i, issue in enumerate(issues):
 Export specific issues with selected fields to CSV:
 
 ```python
-from jira_tool.client import JiraClient
-from jira_tool.analysis.formatters import format_as_csv
+from temet_jira.client import JiraClient
+from temet_jira.analysis.formatters import format_as_csv
 import csv
 
 client = JiraClient()
@@ -176,8 +176,8 @@ print(f"Exported {len(rows)} issues to issues_export.csv")
 Robust issue creation with comprehensive error handling:
 
 ```python
-from jira_tool.client import JiraClient
-from jira_tool.formatter import JiraDocumentBuilder
+from temet_jira.client import JiraClient
+from temet_jira.formatter import JiraDocumentBuilder
 import requests
 import time
 
@@ -270,7 +270,7 @@ if issue_key:
 Create a comprehensive status report from Jira data:
 
 ```python
-from jira_tool.client import JiraClient
+from temet_jira.client import JiraClient
 from datetime import datetime
 
 client = JiraClient()
@@ -315,7 +315,7 @@ Handle Jira webhook events:
 ```python
 from flask import Flask, request
 import json
-from jira_tool.client import JiraClient
+from temet_jira.client import JiraClient
 
 app = Flask(__name__)
 client = JiraClient()
@@ -363,7 +363,7 @@ if __name__ == '__main__':
 Examples of advanced JQL patterns:
 
 ```python
-from jira_tool.client import JiraClient
+from temet_jira.client import JiraClient
 
 client = JiraClient()
 
@@ -418,7 +418,7 @@ print(f"Found {len(active_issues)} recently active issues")
 Calculate metrics from issue data:
 
 ```python
-from jira_tool.client import JiraClient
+from temet_jira.client import JiraClient
 from collections import defaultdict
 from datetime import datetime
 
@@ -480,8 +480,8 @@ for assignee, count in sorted(metrics["by_assignee"].items(), key=lambda x: -x[1
 Create issue with embedded code and panels:
 
 ```python
-from jira_tool.client import JiraClient
-from jira_tool.formatter import JiraDocumentBuilder
+from temet_jira.client import JiraClient
+from temet_jira.formatter import JiraDocumentBuilder
 
 client = JiraClient()
 

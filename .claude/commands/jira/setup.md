@@ -1,8 +1,8 @@
-Run the interactive setup wizard for jira-tool.
+Run the interactive setup wizard for temet-jira.
 
 Usage: /setup
 
-Execute: `jira-tool setup`
+Execute: `temet-jira setup`
 
 This will guide you through configuring:
 - Jira instance URL
@@ -10,4 +10,4 @@ This will guide you through configuring:
 - API token
 - Default project (optional)
 
-Configuration is saved to ~/.config/jira-tool/config.yaml
+Configuration is saved to ~/.config/temet-jira/config.yaml

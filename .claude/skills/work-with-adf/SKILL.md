@@ -27,7 +27,7 @@ This skill helps you work with Atlassian Document Format (ADF), the JSON-based f
 Create a simple ADF paragraph:
 
 ```python
-from jira_tool.formatter import JiraDocumentBuilder
+from temet_jira.formatter import JiraDocumentBuilder
 
 doc = JiraDocumentBuilder()
 doc.add_paragraph(doc.add_text("Hello, Jira!"))
@@ -164,7 +164,7 @@ adf_dict = doc.build()
 
 **Use with Jira API**:
 ```python
-from jira_tool.client import JiraClient
+from temet_jira.client import JiraClient
 
 client = JiraClient()
 client.create_issue(
@@ -180,7 +180,7 @@ client.create_issue(
 ### Example 1: Create a Simple Epic
 
 ```python
-from jira_tool.formatter import EpicBuilder
+from temet_jira.formatter import EpicBuilder
 
 epic = EpicBuilder(
     title="User Authentication System",
@@ -231,7 +231,7 @@ adf = epic.build()
 ### Example 2: Create an Issue with Mixed Content
 
 ```python
-from jira_tool.formatter import IssueBuilder
+from temet_jira.formatter import IssueBuilder
 
 issue = IssueBuilder(
     title="Implement OAuth Google Provider",
@@ -312,7 +312,7 @@ adf_document = {
 ### Example 4: Add Emoji to Documents
 
 ```python
-from jira_tool.formatter import JiraDocumentBuilder
+from temet_jira.formatter import JiraDocumentBuilder
 
 doc = JiraDocumentBuilder()
 
@@ -409,7 +409,7 @@ Create functions for common patterns:
 ```python
 def create_info_section(title: str, content: str) -> dict:
     """Create a titled info panel."""
-    from jira_tool.formatter import JiraDocumentBuilder
+    from temet_jira.formatter import JiraDocumentBuilder
     doc = JiraDocumentBuilder()
     doc.add_heading(title, 2)
     doc.add_panel("info",
@@ -440,7 +440,7 @@ doc.add_code_block(code.strip(), language="python")
 ## Requirements
 
 - Python 3.8+
-- `jira-tool` package (from this repository)
+- `temet-jira` package (from this repository)
 - Knowledge of JSON structure
 - Jira instance with Cloud API access
 

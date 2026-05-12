@@ -3,7 +3,7 @@
 ## Example 1: Create Structured Epic
 
 ```python
-from jira_tool.formatter import EpicBuilder
+from temet_jira.formatter import EpicBuilder
 
 epic = EpicBuilder("Migrate to PostgreSQL 15", "P1", dependencies="Database migration tool")
 epic.add_problem_statement(
@@ -43,7 +43,7 @@ adf = epic.build()
 ## Example 2: Complex Feature Request
 
 ```python
-from jira_tool.formatter import JiraDocumentBuilder
+from temet_jira.formatter import JiraDocumentBuilder
 
 doc = JiraDocumentBuilder()
 
@@ -121,7 +121,7 @@ adf = doc.build()
 ## Example 3: Custom Builder for Bug Reports
 
 ```python
-from jira_tool.formatter import JiraDocumentBuilder
+from temet_jira.formatter import JiraDocumentBuilder
 
 class BugReportBuilder(JiraDocumentBuilder):
     """Specialized builder for structured bug reports."""

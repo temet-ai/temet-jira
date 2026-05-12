@@ -13,7 +13,7 @@
 ### Minimal Document
 
 ```python
-from jira_tool.formatter import JiraDocumentBuilder
+from temet_jira.formatter import JiraDocumentBuilder
 
 doc = JiraDocumentBuilder()
 adf = doc.build()
@@ -29,7 +29,7 @@ adf = doc.build()
 ### Single Paragraph
 
 ```python
-from jira_tool.formatter import JiraDocumentBuilder
+from temet_jira.formatter import JiraDocumentBuilder
 
 doc = JiraDocumentBuilder()
 doc.add_paragraph(doc.add_text("This is a simple paragraph."))
@@ -39,7 +39,7 @@ adf = doc.build()
 ### Heading and Paragraph
 
 ```python
-from jira_tool.formatter import JiraDocumentBuilder
+from temet_jira.formatter import JiraDocumentBuilder
 
 doc = JiraDocumentBuilder()
 doc.add_heading("Main Title", level=1)
@@ -55,7 +55,7 @@ adf = doc.build()
 ### Use Case 1: Create a Bug Report Epic
 
 ```python
-from jira_tool.formatter import EpicBuilder
+from temet_jira.formatter import EpicBuilder
 
 def create_bug_epic(
     title: str,
@@ -115,7 +115,7 @@ adf = create_bug_epic(
 ### Use Case 2: Create a Feature Request with Mockup
 
 ```python
-from jira_tool.formatter import EpicBuilder
+from temet_jira.formatter import EpicBuilder
 
 def create_feature_epic(
     title: str,
@@ -172,7 +172,7 @@ adf = create_feature_epic(
 ### Use Case 3: Create a Task with Code Examples
 
 ```python
-from jira_tool.formatter import IssueBuilder
+from temet_jira.formatter import IssueBuilder
 
 def create_backend_task(
     title: str,
@@ -244,7 +244,7 @@ adf = create_backend_task(
 ### Use Case 4: Create a Meeting Notes Document
 
 ```python
-from jira_tool.formatter import JiraDocumentBuilder
+from temet_jira.formatter import JiraDocumentBuilder
 
 def create_meeting_notes(
     title: str,
@@ -316,7 +316,7 @@ adf = create_meeting_notes(
 ### Use Case 5: Create a Release Notes Document
 
 ```python
-from jira_tool.formatter import JiraDocumentBuilder
+from temet_jira.formatter import JiraDocumentBuilder
 
 def create_release_notes(
     version: str,
@@ -411,7 +411,7 @@ adf = create_release_notes(
 ### Pattern 1: Validate Before Creating
 
 ```python
-from jira_tool.formatter import JiraDocumentBuilder
+from temet_jira.formatter import JiraDocumentBuilder
 
 def safe_add_content(doc: JiraDocumentBuilder, content: str) -> JiraDocumentBuilder:
     """Add content with validation."""
@@ -431,7 +431,7 @@ adf = doc.build()
 ### Pattern 2: Handle None Values
 
 ```python
-from jira_tool.formatter import IssueBuilder
+from temet_jira.formatter import IssueBuilder
 
 def create_issue_safe(
     title: str,
@@ -465,7 +465,7 @@ adf = create_issue_safe(
 ### Pattern 3: Conditional Sections
 
 ```python
-from jira_tool.formatter import EpicBuilder
+from temet_jira.formatter import EpicBuilder
 
 def create_epic_with_options(
     title: str,
@@ -513,7 +513,7 @@ adf = create_epic_with_options(
 ### Pattern 1: Nested Lists
 
 ```python
-from jira_tool.formatter import JiraDocumentBuilder
+from temet_jira.formatter import JiraDocumentBuilder
 
 doc = JiraDocumentBuilder()
 
@@ -543,7 +543,7 @@ adf = doc.build()
 ### Pattern 2: Side-by-Side Content via Table
 
 ```python
-from jira_tool.formatter import JiraDocumentBuilder
+from temet_jira.formatter import JiraDocumentBuilder
 
 def create_comparison_table(items: list[tuple[str, str]]) -> dict:
     """Create a 2-column comparison table."""
@@ -591,7 +591,7 @@ comparison = create_comparison_table([
 ### Pattern 3: Multi-Format Content
 
 ```python
-from jira_tool.formatter import JiraDocumentBuilder
+from temet_jira.formatter import JiraDocumentBuilder
 
 doc = JiraDocumentBuilder()
 
@@ -630,7 +630,7 @@ adf = doc.build()
 ### Pattern 4: Dynamic Table Generation
 
 ```python
-from jira_tool.formatter import JiraDocumentBuilder
+from temet_jira.formatter import JiraDocumentBuilder
 
 def create_data_table(headers: list[str], rows: list[list[str]]) -> dict:
     """Create a dynamic table from headers and rows."""
@@ -823,7 +823,7 @@ Blockquotes are useful for highlighting important information or quotes.
 ```python
 def create_requirement_with_quote():
     """Create a requirement document with blockquote."""
-    from jira_tool.formatter import JiraDocumentBuilder
+    from temet_jira.formatter import JiraDocumentBuilder
 
     doc = JiraDocumentBuilder()
 

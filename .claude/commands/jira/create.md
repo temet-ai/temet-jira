@@ -2,7 +2,7 @@ Create a new Jira issue.
 
 Usage: /create --project PROJ --type Task --summary "Title"
 
-Execute: `jira-tool create $ARGUMENTS`
+Execute: `temet-jira create $ARGUMENTS`
 
 Common options:
 - `--project PROJ` - Project key (required)

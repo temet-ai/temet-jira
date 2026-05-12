@@ -1026,7 +1026,7 @@ The project's `JiraClient` handles this automatically with exponential backoff.
 Custom fields vary per Jira instance. Always discover them programmatically:
 
 ```python
-from jira_tool.client import JiraClient
+from temet_jira.client import JiraClient
 
 client = JiraClient()
 

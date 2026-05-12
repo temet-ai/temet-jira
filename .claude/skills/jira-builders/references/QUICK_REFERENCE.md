@@ -1,4 +1,4 @@
-# jira-tool CLI - Quick Reference
+# temet-jira CLI - Quick Reference
 
 ## Most Common Operations
 
@@ -6,41 +6,41 @@
 
 ```bash
 # Get total ticket count
-jira-tool search 'project=PROJ' --stats
+temet-jira search 'project=PROJ' --stats
 
 # Find export-related tickets
-jira-tool search 'project=PROJ AND (summary~"export" OR summary~"oracle")'
+temet-jira search 'project=PROJ AND (summary~"export" OR summary~"oracle")'
 
 # List all epics
-jira-tool epics --project PROJ
+temet-jira epics --project PROJ
 
 # Get epic with children
-jira-tool epic-details PROJ-370
+temet-jira epic-details PROJ-370
 
 # Search by status
-jira-tool search 'project=PROJ AND status="In Progress"'
+temet-jira search 'project=PROJ AND status="In Progress"'
 
 # Search by assignee
-jira-tool search 'project=PROJ AND assignee=currentUser()'
+temet-jira search 'project=PROJ AND assignee=currentUser()'
 
 # Complex JQL
-jira-tool search 'project=PROJ AND (status="To Do" OR status="In Progress") AND assignee=currentUser() ORDER BY priority DESC'
+temet-jira search 'project=PROJ AND (status="To Do" OR status="In Progress") AND assignee=currentUser() ORDER BY priority DESC'
 ```
 
 ### Export Data for Analysis
 
 ```bash
 # Export all tickets to JSON Lines (best for processing)
-jira-tool export --project PROJ --all --format jsonl -o tickets.jsonl
+temet-jira export --project PROJ --all --format jsonl -o tickets.jsonl
 
 # Then process with jq:
 jq -r 'select(.fields.status.name == "To Do") | .key' tickets.jsonl
 
 # Export to CSV for spreadsheets
-jira-tool export --project PROJ --all --format csv -o tickets.csv
+temet-jira export --project PROJ --all --format csv -o tickets.csv
 
 # Export with changelog (for state analysis)
-jira-tool export --project PROJ --expand changelog --format json -o issues.json
+temet-jira export --project PROJ --expand changelog --format json -o issues.json
 
 # Count tickets by status
 jq -r '.fields.status.name' tickets.jsonl | sort | uniq -c
@@ -50,7 +50,7 @@ jq -r '.fields.status.name' tickets.jsonl | sort | uniq -c
 
 ```bash
 # Create epic with formatted description
-jira-tool create --project PROJ --type Epic \
+temet-jira create --project PROJ --type Epic \
   --summary "Daily CSV Export" \
   --description "$(cat <<'EOF'
 Epic for CSV export functionality with automated scheduling.
@@ -65,18 +65,18 @@ EOF
 )"
 
 # Create story under epic
-jira-tool create --project PROJ --type Story \
+temet-jira create --project PROJ --type Story \
   --summary "Configure Cloud Scheduler" \
   --parent PROJ-370 \
   --description "Set up Cloud Scheduler to trigger daily at 2 AM UTC"
 
 # Create sub-task
-jira-tool create --project PROJ --type Sub-task \
+temet-jira create --project PROJ --type Sub-task \
   --summary "Add timezone handling" \
   --parent PROJ-371
 
 # Create with assignee
-jira-tool create --project PROJ --type Story \
+temet-jira create --project PROJ --type Story \
   --summary "Implement retry logic" \
   --assignee "email@example.com"
 ```
@@ -85,26 +85,26 @@ jira-tool create --project PROJ --type Story \
 
 ```bash
 # Rich formatted output (default)
-jira-tool get PROJ-370
+temet-jira get PROJ-370
 
 # JSON output for processing
-jira-tool search 'key=PROJ-370' --format json
+temet-jira search 'key=PROJ-370' --format json
 
 # Get with specific fields
-jira-tool get PROJ-370 --fields summary,status,assignee
+temet-jira get PROJ-370 --fields summary,status,assignee
 ```
 
 ### Update Tickets
 
 ```bash
 # Update status
-jira-tool update PROJ-370 --status "In Progress"
+temet-jira update PROJ-370 --status "In Progress"
 
 # Add comment
-jira-tool comment PROJ-370 "Started implementation"
+temet-jira comment PROJ-370 "Started implementation"
 
 # View available transitions
-jira-tool transitions PROJ-370
+temet-jira transitions PROJ-370
 ```
 
 ## Output Formats
@@ -113,16 +113,16 @@ The `--format` flag controls output style:
 
 ```bash
 # Table (default, for console viewing)
-jira-tool search 'project=PROJ' --format table
+temet-jira search 'project=PROJ' --format table
 
 # JSON (pretty-printed, small datasets)
-jira-tool search 'project=PROJ' --format json
+temet-jira search 'project=PROJ' --format json
 
 # JSONL (one per line, large datasets)
-jira-tool export --project PROJ --all --format jsonl -o file.jsonl
+temet-jira export --project PROJ --all --format jsonl -o file.jsonl
 
 # CSV (spreadsheet-compatible)
-jira-tool export --project PROJ --all --format csv -o file.csv
+temet-jira export --project PROJ --all --format csv -o file.csv
 ```
 
 **Format Selection Guide:**
@@ -135,22 +135,22 @@ jira-tool export --project PROJ --all --format csv -o file.csv
 
 ```bash
 # My open tickets
-jira-tool search 'assignee=currentUser() AND status!="Done"'
+temet-jira search 'assignee=currentUser() AND status!="Done"'
 
 # Recently updated
-jira-tool search 'project=PROJ AND updated >= -7d'
+temet-jira search 'project=PROJ AND updated >= -7d'
 
 # High priority blockers
-jira-tool search 'priority in (Highest, High) AND status="Blocked"'
+temet-jira search 'priority in (Highest, High) AND status="Blocked"'
 
 # Tickets without assignee
-jira-tool search 'project=PROJ AND assignee is EMPTY'
+temet-jira search 'project=PROJ AND assignee is EMPTY'
 
 # Epics with children
-jira-tool search 'project=PROJ AND type=Epic' --expand subtasks
+temet-jira search 'project=PROJ AND type=Epic' --expand subtasks
 
 # Text search across summary and description
-jira-tool search 'project=PROJ AND text~"authentication"'
+temet-jira search 'project=PROJ AND text~"authentication"'
 ```
 
 ## Workflow Analysis
@@ -159,10 +159,10 @@ State duration analysis requires changelog:
 
 ```bash
 # Step 1: Export with changelog
-jira-tool export PROJ --expand changelog --format json -o issues.json
+temet-jira export PROJ --expand changelog --format json -o issues.json
 
 # Step 2: Analyze durations
-jira-tool analyze state-durations issues.json -o durations.csv
+temet-jira analyze state-durations issues.json -o durations.csv
 
 # Open in spreadsheet
 open durations.csv  # macOS
@@ -184,17 +184,17 @@ Create multiple related tickets:
 #!/bin/bash
 
 # Create epic and capture key
-EPIC=$(jira-tool create --project PROJ --type Epic \
+EPIC=$(temet-jira create --project PROJ --type Epic \
   --summary "Q1 2026 Features" --format json | jq -r '.key')
 
 # Create stories under epic
 for feature in "User Auth" "API Gateway" "Dashboard"; do
-  STORY=$(jira-tool create --project PROJ --type Story \
+  STORY=$(temet-jira create --project PROJ --type Story \
     --summary "$feature" --parent "$EPIC" --format json | jq -r '.key')
 
   # Create sub-tasks for each story
   for task in "Design" "Implementation" "Testing"; do
-    jira-tool create --project PROJ --type Sub-task \
+    temet-jira create --project PROJ --type Sub-task \
       --summary "$feature - $task" --parent "$STORY"
   done
 done
@@ -208,37 +208,37 @@ echo "Created epic $EPIC with stories and sub-tasks"
 
 **Cause:** You tried `from jira_tool import ...`
 
-**Solution:** The jira_tool Python module is private/internal. Use `jira-tool` CLI instead.
+**Solution:** The jira_tool Python module is private/internal. Use `temet-jira` CLI instead.
 
 ```bash
 # WRONG
 python3 -c "from jira_tool import JiraClient"
 
 # RIGHT
-jira-tool search 'project=PROJ'
+temet-jira search 'project=PROJ'
 ```
 
 ### "0 results found" (when tickets exist)
 
 **Debug Steps:**
-1. Verify project exists: `jira-tool search 'project=PROJ' --stats`
-2. Check JQL syntax with simpler query: `jira-tool search 'key=PROJ-370'`
-3. Try without filters: `jira-tool epics --project PROJ`
+1. Verify project exists: `temet-jira search 'project=PROJ' --stats`
+2. Check JQL syntax with simpler query: `temet-jira search 'key=PROJ-370'`
+3. Try without filters: `temet-jira epics --project PROJ`
 4. Verify credentials: `echo $JIRA_BASE_URL`
 
-### "jira-tool: command not found"
+### "temet-jira: command not found"
 
 **Cause:** Tool not installed or not in PATH
 
 **Solution:**
 ```bash
 # Check if installed
-which jira-tool
+which temet-jira
 
 # If not found, install from project directory
-cd /path/to/jira-tool
+cd /path/to/temet-jira
 uv sync
-uv run jira-tool --version
+uv run temet-jira --version
 ```
 
 ### "Authentication failed" / "401 Unauthorized"
@@ -258,21 +258,21 @@ uv run jira-tool --version
 
 3. Test authentication:
    ```bash
-   jira-tool search 'project=PROJ' --stats
+   temet-jira search 'project=PROJ' --stats
    ```
 
 ### "curl: option : blank argument"
 
-**Cause:** You tried to use curl with environment variables instead of jira-tool
+**Cause:** You tried to use curl with environment variables instead of temet-jira
 
-**Solution:** Use `jira-tool` CLI - it handles authentication automatically
+**Solution:** Use `temet-jira` CLI - it handles authentication automatically
 
 ```bash
 # WRONG
 curl -u "$JIRA_USERNAME:$JIRA_API_TOKEN" "$JIRA_BASE_URL/rest/api/3/search"
 
 # RIGHT
-jira-tool search 'project=PROJ'
+temet-jira search 'project=PROJ'
 ```
 
 ## Environment Setup
@@ -293,7 +293,7 @@ export JIRA_DEFAULT_PROJECT="PROJ"
 Generate API token:
 1. Go to https://id.atlassian.com/manage/api-tokens
 2. Click "Create API token"
-3. Give it a name (e.g., "jira-tool CLI")
+3. Give it a name (e.g., "temet-jira CLI")
 4. Copy token and add to environment
 
 ## Advanced Tips
@@ -302,10 +302,10 @@ Generate API token:
 
 ```bash
 # Get issue keys only
-jira-tool search 'project=PROJ' --format json | jq -r '.issues[].key'
+temet-jira search 'project=PROJ' --format json | jq -r '.issues[].key'
 
 # Count by status
-jira-tool export --project PROJ --all --format jsonl -o tickets.jsonl
+temet-jira export --project PROJ --all --format jsonl -o tickets.jsonl
 jq -r '.fields.status.name' tickets.jsonl | sort | uniq -c | sort -rn
 
 # Extract custom fields
@@ -316,7 +316,7 @@ jq -r '.fields.customfield_10014' tickets.jsonl  # Epic Link
 
 ```bash
 # Monitor ticket status every 30 seconds
-watch -n 30 'jira-tool get PROJ-370 --fields status,assignee'
+watch -n 30 'temet-jira get PROJ-370 --fields status,assignee'
 ```
 
 ### Bulk Export
@@ -324,7 +324,7 @@ watch -n 30 'jira-tool get PROJ-370 --fields status,assignee'
 ```bash
 # Export multiple projects
 for project in PROJ PROJ AUTH; do
-  jira-tool export --project $project --all --format jsonl \
+  temet-jira export --project $project --all --format jsonl \
     -o "${project}_tickets.jsonl"
 done
 ```
@@ -335,10 +335,10 @@ For large datasets (>100 tickets), ALWAYS use JSONL:
 
 ```bash
 # JSON: Loads entire array in memory (slow for 1000+ tickets)
-jira-tool export --project PROJ --all --format json -o tickets.json
+temet-jira export --project PROJ --all --format json -o tickets.json
 
 # JSONL: Streams one ticket per line (fast for any size)
-jira-tool export --project PROJ --all --format jsonl -o tickets.jsonl
+temet-jira export --project PROJ --all --format jsonl -o tickets.jsonl
 
 # Process JSONL line-by-line
 while IFS= read -r line; do
@@ -348,7 +348,7 @@ done < tickets.jsonl
 
 ## When to Use jira-ticket-manager Agent
 
-Use the agent for complex operations that jira-tool CLI doesn't support:
+Use the agent for complex operations that temet-jira CLI doesn't support:
 
 ```bash
 # Agent invocation (via Claude Code)
@@ -373,5 +373,5 @@ Subagent: jira-ticket-manager
 ## See Also
 
 - Main skill documentation: `~/.claude/skills/jira-builders/SKILL.md`
-- Project CLAUDE.md: `/path/to/jira-tool/CLAUDE.md`
+- Project CLAUDE.md: `/path/to/temet-jira/CLAUDE.md`
 - Tool selection guide: `~/.claude/skills/jira-builders/references/TOOL_SELECTION.md`

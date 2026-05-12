@@ -2,7 +2,7 @@ Export Jira issues with advanced filtering.
 
 Usage: /export PROJ --format csv -o tickets.csv
 
-Execute: `jira-tool export $ARGUMENTS`
+Execute: `temet-jira export $ARGUMENTS`
 
 Common options:
 - `--project PROJ` - Filter by project
