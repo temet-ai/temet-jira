@@ -1,6 +1,6 @@
 # Python API Guide
 
-Complete guide to using the `jira-tool` Python API programmatically.
+Complete guide to using the `temet-jira` Python API programmatically.
 
 ## Table of Contents
 
@@ -20,17 +20,15 @@ Complete guide to using the `jira-tool` Python API programmatically.
 ### Installation
 
 ```bash
-# Install the package
-pip install -e .
-
-# Or with uv
-uv pip install -e .
+pip install temet-jira
+# or
+uv add temet-jira
 ```
 
 ### Basic Usage
 
 ```python
-from jira_tool import JiraClient
+from temet_jira import JiraClient
 
 # Initialize client (uses environment variables)
 client = JiraClient()
@@ -58,7 +56,7 @@ os.environ["JIRA_USERNAME"] = "your-email@example.com"
 os.environ["JIRA_API_TOKEN"] = "your-api-token"
 
 # Or pass directly to constructor
-from jira_tool import JiraClient
+from temet_jira import JiraClient
 
 client = JiraClient(
     base_url="https://your-company.atlassian.net",
@@ -72,7 +70,7 @@ client = JiraClient(
 ### Initialization
 
 ```python
-from jira_tool import JiraClient
+from temet_jira import JiraClient
 
 # Use environment variables (recommended)
 client = JiraClient()
@@ -269,7 +267,7 @@ print(f"Lead: {project['lead']['displayName']}")
 Build Atlassian Document Format (ADF) content with a fluent API:
 
 ```python
-from jira_tool.formatter import JiraDocumentBuilder
+from temet_jira.formatter import JiraDocumentBuilder
 
 # Create builder
 doc = JiraDocumentBuilder()
@@ -349,7 +347,7 @@ doc.add_paragraph(
 Specialized builder for creating well-structured issues and tasks:
 
 ```python
-from jira_tool import JiraClient, IssueBuilder
+from temet_jira import JiraClient, IssueBuilder
 
 client = JiraClient()
 
@@ -419,7 +417,7 @@ issue = client.create_issue({
 Specialized builder for creating comprehensive epics:
 
 ```python
-from jira_tool import JiraClient, EpicBuilder
+from temet_jira import JiraClient, EpicBuilder
 
 client = JiraClient()
 
@@ -504,8 +502,8 @@ print(f"Created epic: {epic['key']}")
 Analyze how long issues spent in each workflow state:
 
 ```python
-from jira_tool import JiraClient
-from jira_tool.analysis import StateDurationAnalyzer
+from temet_jira import JiraClient
+from temet_jira.analysis import StateDurationAnalyzer
 
 client = JiraClient()
 
@@ -539,7 +537,7 @@ for issue_key, states in results.items():
 ### StateDurationAnalyzer Methods
 
 ```python
-from jira_tool.analysis import StateDurationAnalyzer
+from temet_jira.analysis import StateDurationAnalyzer
 
 analyzer = StateDurationAnalyzer()
 
@@ -563,7 +561,7 @@ csv = analyzer.format_as_csv(results, include_business_hours=True)
 ### StateDuration Data Class
 
 ```python
-from jira_tool.analysis.state_analyzer import StateDuration
+from temet_jira.analysis.state_analyzer import StateDuration
 
 # StateDuration attributes:
 duration.state                    # str: State name
@@ -720,7 +718,7 @@ for attachment in attachments:
 ### Example 1: Create Epic with Child Issues
 
 ```python
-from jira_tool import JiraClient, EpicBuilder, IssueBuilder
+from temet_jira import JiraClient, EpicBuilder, IssueBuilder
 
 client = JiraClient()
 
@@ -768,7 +766,7 @@ for task in tasks:
 ### Example 2: Generate Sprint Report
 
 ```python
-from jira_tool import JiraClient
+from temet_jira import JiraClient
 import csv
 
 client = JiraClient()
@@ -810,8 +808,8 @@ print("Sprint report generated: sprint_report.csv")
 ### Example 3: Workflow Bottleneck Analysis
 
 ```python
-from jira_tool import JiraClient
-from jira_tool.analysis import StateDurationAnalyzer
+from temet_jira import JiraClient
+from temet_jira.analysis import StateDurationAnalyzer
 from collections import defaultdict
 
 client = JiraClient()

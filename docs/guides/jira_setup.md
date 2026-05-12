@@ -1,12 +1,12 @@
 # Jira Setup Guide
 
-This guide walks you through setting up authentication for the `jira-tool` CLI.
+This guide walks you through setting up authentication for the `temet-jira` CLI.
 
 ## Prerequisites
 
 - A Jira Cloud instance (e.g., `https://your-company.atlassian.net`)
 - An Atlassian account with access to your Jira instance
-- Python 3.8+ and `uv` installed
+- Python 3.11+
 
 ## Step 1: Generate Your Jira API Token
 
@@ -27,7 +27,7 @@ This guide walks you through setting up authentication for the `jira-tool` CLI.
 ### Generate the Token
 
 1. Click **Create API token**
-2. Enter a descriptive label (e.g., "jira-tool CLI - Development Laptop")
+2. Enter a descriptive label (e.g., "temet-jira CLI - Development Laptop")
 3. Click **Create**
 4. **Copy the token immediately** - you won't be able to see it again!
 
@@ -35,33 +35,33 @@ This guide walks you through setting up authentication for the `jira-tool` CLI.
 
 ## Step 2: Choose Your Usage Method
 
-### Development vs System-Wide Usage
+### Global Install (Recommended)
 
-**Development Usage** (`uv run jira-tool`):
-- Use during development or testing
-- Runs from the project directory
-- Automatically loads `.env` file
-- No system-wide installation needed
-- Command: `uv run jira-tool [command]`
+Install once, use anywhere on your system:
 
-**System-Wide Usage** (`jira-tool`):
-- Install once, use anywhere on your system
-- Requires installation via `./scripts/build_and_install.sh`
-- Needs environment variables in shell profile OR must be run from project directory
-- Command: `jira-tool [command]`
+```bash
+uv tool install temet-jira
+```
 
-**Which should you use?**
-- **Development/Testing:** Use `uv run jira-tool` with `.env` file (Option B)
-- **Personal Daily Use:** Install system-wide with environment variables (Option A)
-- **Team/Project Use:** Use `.env` file with specific configurations per project (Option B)
+Then use from any directory:
+```bash
+temet-jira [command]
+```
+
+### Development Mode
+
+For contributors working on the source code:
+
+```bash
+uv sync
+uv run temet-jira [command]
+```
 
 ## Step 3: Configure Your Environment
 
-You have two options for storing your credentials:
+### Option A: Environment Variables (Recommended)
 
-### Option A: Environment Variables (Recommended for System-Wide Use)
-
-This option allows you to use `jira-tool` from **any directory** after system-wide installation.
+This option allows you to use `temet-jira` from **any directory**.
 
 #### macOS/Linux
 
@@ -97,52 +97,15 @@ $env:JIRA_API_TOKEN = "your-api-token-here"
 Or set system environment variables through:
 - Settings → System → About → Advanced system settings → Environment Variables
 
-### Option B: .env File (Recommended for Development/Project Use)
+### Option B: Interactive Setup Wizard
 
-The `.env` file is automatically loaded when you run commands **from the project directory**.
-
-1. Create a `.env` file in the project root (or copy from `.env.example`):
+Run the setup wizard to configure credentials interactively:
 
 ```bash
-# Jira Cloud Configuration
-# Generate token at: https://id.atlassian.com/manage-profile/security/api-tokens
-
-# IMPORTANT: Do NOT use quotes around values - they will be included as part of the value
-JIRA_BASE_URL=https://your-company.atlassian.net
-JIRA_USERNAME=your-email@example.com
-JIRA_API_TOKEN=your-api-token-here
-
-# Optional: Set defaults for commands
-JIRA_DEFAULT_PROJECT=PROJ
-JIRA_DEFAULT_COMPONENT=Component Name
+temet-jira setup
 ```
 
-**Important Notes:**
-- ❌ **Do NOT use quotes** around values (e.g., `JIRA_BASE_URL="https://..."` is WRONG)
-- ✅ **Correct:** `JIRA_BASE_URL=https://your-company.atlassian.net`
-- The `.env` file is loaded from your **current working directory**
-- For system-wide installation, you must run commands from the project directory OR set environment variables in your shell profile
-
-2. **NEVER commit `.env` to version control!** Verify it's in `.gitignore`:
-
-```bash
-# Should show: .env
-grep "^\.env" .gitignore
-```
-
-3. Run commands from the project directory:
-
-```bash
-# Development usage - loads .env automatically
-cd /path/to/jira-tool
-uv run jira-tool get PROJ-123
-
-# System-wide installation - must run from project directory to load .env
-cd /path/to/jira-tool
-jira-tool get PROJ-123
-```
-
-**For system-wide usage from any directory:** Use Option A (Environment Variables) instead.
+Credentials are saved to `~/.config/temet-jira/config.yaml`.
 
 ## Step 4: Verify Your Setup
 
@@ -150,7 +113,7 @@ Test your authentication:
 
 ```bash
 # Using the CLI
-uv run jira-tool search "project = YOUR_PROJECT" --limit 1
+temet-jira search "project = YOUR_PROJECT" --limit 1
 
 # Or test directly with curl
 curl -u "$JIRA_USERNAME:$JIRA_API_TOKEN" \
@@ -163,26 +126,26 @@ If successful, you should see your user information or search results.
 
 ```bash
 # Get issue details
-uv run jira-tool get PROJ-123
+temet-jira get PROJ-123
 
 # Search for issues
-uv run jira-tool search "project = PROJ AND status = Open"
+temet-jira search "project = PROJ AND status = Open"
 
 # Create an issue
-uv run jira-tool create "Bug: Login not working" --type Bug
+temet-jira create "Bug: Login not working" --type Bug
 
 # Export to CSV
-uv run jira-tool export PROJ --format csv -o issues.csv
+temet-jira export PROJ --format csv -o issues.csv
 ```
 
 For more commands, see the main [README.md](../../README.md) or run:
 ```bash
-uv run jira-tool --help
+temet-jira --help
 ```
 
 ## Security Best Practices
 
-### ✅ DO:
+### DO:
 
 - **Use descriptive labels** for tokens (e.g., "MacBook Pro - Development")
 - **Set reasonable expiration dates** (90 days for regular use, 30 days for testing)
@@ -192,7 +155,7 @@ uv run jira-tool --help
 - **Use scoped tokens** when possible (for limited permissions)
 - **Keep `.env` files in `.gitignore`**
 
-### ❌ DON'T:
+### DON'T:
 
 - **Never commit tokens to git** (check with `git log -p | grep JIRA_API_TOKEN`)
 - **Never share tokens** (create separate tokens for each person)
@@ -283,7 +246,7 @@ curl -v -u "$JIRA_USERNAME:$JIRA_API_TOKEN" \
 
 - [ ] Generate new token with expiration date
 - [ ] Update `JIRA_API_TOKEN` in environment/`.env` file
-- [ ] Test with `jira-tool` CLI
+- [ ] Test with `temet-jira` CLI
 - [ ] Update CI/CD secrets (if applicable)
 - [ ] Update documentation/scripts with new token
 - [ ] Revoke old token
@@ -344,7 +307,7 @@ export JIRA_API_TOKEN=$(op read "op://Personal/Jira/api-token")
 
 ## Need Help?
 
-- **Project Issues:** [GitHub Issues](https://github.com/your-org/jira-tool/issues)
+- **Project Issues:** [GitHub Issues](https://github.com/temet-ai/temet-jira/issues)
 - **Jira Support:** [Atlassian Support](https://support.atlassian.com)
 - **Community:** [Atlassian Community](https://community.atlassian.com)
 

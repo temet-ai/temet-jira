@@ -1,6 +1,6 @@
 # CLI Command Reference
 
-Complete reference for all `jira-tool` CLI commands.
+Complete reference for all `temet-jira` CLI commands.
 
 ## Table of Contents
 
@@ -16,6 +16,9 @@ Complete reference for all `jira-tool` CLI commands.
   - [epic-details](#epic-details)
   - [export](#export)
   - [analyze state-durations](#analyze-state-durations)
+  - [setup](#setup)
+  - [types](#types)
+  - [mcp](#mcp)
 - [Output Formats](#output-formats)
 
 ## Global Options
@@ -34,7 +37,7 @@ Get full details of a specific Jira issue.
 
 **Usage:**
 ```bash
-jira-tool get ISSUE_KEY [OPTIONS]
+temet-jira get ISSUE_KEY [OPTIONS]
 ```
 
 **Arguments:**
@@ -46,16 +49,16 @@ jira-tool get ISSUE_KEY [OPTIONS]
 **Examples:**
 ```bash
 # Get basic issue details
-jira-tool get PROJ-123
+temet-jira get PROJ-123
 
 # Get issue with changelog
-jira-tool get PROJ-123 --expand changelog
+temet-jira get PROJ-123 --expand changelog
 
 # Get issue with available transitions
-jira-tool get PROJ-123 --expand transitions
+temet-jira get PROJ-123 --expand transitions
 
 # Get issue with multiple expansions
-jira-tool get PROJ-123 --expand changelog,transitions
+temet-jira get PROJ-123 --expand changelog,transitions
 ```
 
 **Output:**
@@ -78,7 +81,7 @@ Search for issues using JQL (Jira Query Language).
 
 **Usage:**
 ```bash
-jira-tool search JQL_QUERY [OPTIONS]
+temet-jira search JQL_QUERY [OPTIONS]
 ```
 
 **Arguments:**
@@ -95,19 +98,19 @@ jira-tool search JQL_QUERY [OPTIONS]
 **Examples:**
 ```bash
 # Basic search
-jira-tool search "project = PROJ AND status = 'In Progress'"
+temet-jira search "project = PROJ AND status = 'In Progress'"
 
 # Search with custom fields
-jira-tool search "assignee = currentUser()" --fields summary,status,priority
+temet-jira search "assignee = currentUser()" --fields summary,status,priority
 
 # Get all results as JSON
-jira-tool search "project = PROJ" --all --format json -o all_issues.json
+temet-jira search "project = PROJ" --all --format json -o all_issues.json
 
 # Search with changelog for analysis
-jira-tool search "project = PROJ" --expand changelog --format json
+temet-jira search "project = PROJ" --expand changelog --format json
 
 # Complex JQL query
-jira-tool search "project = PROJ AND (status = 'In Progress' OR status = 'Review') AND priority = High"
+temet-jira search "project = PROJ AND (status = 'In Progress' OR status = 'Review') AND priority = High"
 ```
 
 ---
@@ -118,7 +121,7 @@ Create a new Jira issue.
 
 **Usage:**
 ```bash
-jira-tool create [OPTIONS]
+temet-jira create [OPTIONS]
 ```
 
 **Options:**
@@ -135,10 +138,10 @@ jira-tool create [OPTIONS]
 **Examples:**
 ```bash
 # Simple task
-jira-tool create --summary "Fix login bug" --type Task
+temet-jira create --summary "Fix login bug" --type Task
 
 # Full issue with details
-jira-tool create \
+temet-jira create \
   --summary "Implement OAuth2" \
   --type Story \
   --description "Add OAuth2 authentication" \
@@ -147,7 +150,7 @@ jira-tool create \
   --epic PROJ-100
 
 # Create in specific project
-jira-tool create --summary "Update docs" --type Task --project DOCS
+temet-jira create --summary "Update docs" --type Task --project DOCS
 ```
 
 ---
@@ -158,7 +161,7 @@ Update an existing Jira issue.
 
 **Usage:**
 ```bash
-jira-tool update ISSUE_KEY [OPTIONS]
+temet-jira update ISSUE_KEY [OPTIONS]
 ```
 
 **Arguments:**
@@ -175,19 +178,19 @@ jira-tool update ISSUE_KEY [OPTIONS]
 **Examples:**
 ```bash
 # Update status
-jira-tool update PROJ-123 --status "In Progress"
+temet-jira update PROJ-123 --status "In Progress"
 
 # Update multiple fields
-jira-tool update PROJ-123 \
+temet-jira update PROJ-123 \
   --summary "Updated title" \
   --priority High \
   --assignee user@example.com
 
 # Update description
-jira-tool update PROJ-123 --description "New detailed description"
+temet-jira update PROJ-123 --description "New detailed description"
 
 # Update labels
-jira-tool update PROJ-123 --labels "urgent,backend,security"
+temet-jira update PROJ-123 --labels "urgent,backend,security"
 ```
 
 ---
@@ -198,7 +201,7 @@ Add a comment to a Jira issue.
 
 **Usage:**
 ```bash
-jira-tool comment ISSUE_KEY [OPTIONS]
+temet-jira comment ISSUE_KEY [OPTIONS]
 ```
 
 **Arguments:**
@@ -210,10 +213,10 @@ jira-tool comment ISSUE_KEY [OPTIONS]
 **Examples:**
 ```bash
 # Add comment with flag
-jira-tool comment PROJ-123 -m "This looks good to merge"
+temet-jira comment PROJ-123 -m "This looks good to merge"
 
 # Interactive mode (will prompt for comment)
-jira-tool comment PROJ-123
+temet-jira comment PROJ-123
 ```
 
 ---
@@ -224,7 +227,7 @@ Show available workflow transitions for an issue.
 
 **Usage:**
 ```bash
-jira-tool transitions ISSUE_KEY
+temet-jira transitions ISSUE_KEY
 ```
 
 **Arguments:**
@@ -233,7 +236,7 @@ jira-tool transitions ISSUE_KEY
 **Examples:**
 ```bash
 # View available transitions
-jira-tool transitions PROJ-123
+temet-jira transitions PROJ-123
 ```
 
 **Output:**
@@ -247,7 +250,7 @@ List all epics in a project.
 
 **Usage:**
 ```bash
-jira-tool epics [OPTIONS]
+temet-jira epics [OPTIONS]
 ```
 
 **Options:**
@@ -258,13 +261,13 @@ jira-tool epics [OPTIONS]
 **Examples:**
 ```bash
 # List epics (uses default project)
-jira-tool epics
+temet-jira epics
 
 # List epics for specific project
-jira-tool epics --project PROJ
+temet-jira epics --project PROJ
 
 # Export as JSON
-jira-tool epics --project PROJ --format json -o epics.json
+temet-jira epics --project PROJ --format json -o epics.json
 ```
 
 ---
@@ -275,7 +278,7 @@ Get detailed information about an epic, optionally including child issues.
 
 **Usage:**
 ```bash
-jira-tool epic-details EPIC_KEY [OPTIONS]
+temet-jira epic-details EPIC_KEY [OPTIONS]
 ```
 
 **Arguments:**
@@ -289,13 +292,13 @@ jira-tool epic-details EPIC_KEY [OPTIONS]
 **Examples:**
 ```bash
 # Get epic details only
-jira-tool epic-details PROJ-100
+temet-jira epic-details PROJ-100
 
 # Get epic with all child issues
-jira-tool epic-details PROJ-100 --show-children
+temet-jira epic-details PROJ-100 --show-children
 
 # Export epic and children as JSON
-jira-tool epic-details PROJ-100 --show-children --format json -o epic.json
+temet-jira epic-details PROJ-100 --show-children --format json -o epic.json
 ```
 
 ---
@@ -306,7 +309,7 @@ Export issues with advanced filtering and formatting options.
 
 **Usage:**
 ```bash
-jira-tool export [OPTIONS]
+temet-jira export [OPTIONS]
 ```
 
 **Options:**
@@ -340,19 +343,19 @@ jira-tool export [OPTIONS]
 **Examples:**
 ```bash
 # Export all issues (uses default project)
-jira-tool export --format csv -o tickets.csv
+temet-jira export --format csv -o tickets.csv
 
 # Export specific project
-jira-tool export --project PROJ --format json -o proj_issues.json
+temet-jira export --project PROJ --format json -o proj_issues.json
 
 # Filter by status
-jira-tool export --status "In Progress" --format table
+temet-jira export --status "In Progress" --format table
 
 # Filter by assignee
-jira-tool export --assignee "me" --format csv -o my_tickets.csv
+temet-jira export --assignee "me" --format csv -o my_tickets.csv
 
 # Multiple filters
-jira-tool export \
+temet-jira export \
   --project PROJ \
   --status "In Progress" \
   --assignee "me" \
@@ -360,19 +363,19 @@ jira-tool export \
   --format csv -o filtered.csv
 
 # Group results
-jira-tool export --group-by assignee --stats
+temet-jira export --group-by assignee --stats
 
 # Export with changelog for analysis
-jira-tool export --project PROJ --expand changelog --format json -o analysis.json
+temet-jira export --project PROJ --expand changelog --format json -o analysis.json
 
 # Export recent issues
-jira-tool export --created "-7d" --format table
+temet-jira export --created "-7d" --format table
 
 # Export all issues (large dataset)
-jira-tool export --project PROJ --all --format jsonl -o all_issues.jsonl
+temet-jira export --project PROJ --all --format jsonl -o all_issues.jsonl
 
 # Custom JQL
-jira-tool export --jql "assignee = currentUser() AND status NOT IN (Done, Closed)"
+temet-jira export --jql "assignee = currentUser() AND status NOT IN (Done, Closed)"
 ```
 
 ---
@@ -383,7 +386,7 @@ Analyze how long issues spent in each workflow state.
 
 **Usage:**
 ```bash
-jira-tool analyze state-durations INPUT_FILE [OPTIONS]
+temet-jira analyze state-durations INPUT_FILE [OPTIONS]
 ```
 
 **Arguments:**
@@ -395,16 +398,16 @@ jira-tool analyze state-durations INPUT_FILE [OPTIONS]
 **Prerequisites:**
 Issues must be exported with `--expand changelog`:
 ```bash
-jira-tool export --project PROJ --expand changelog --format json -o issues.json
+temet-jira export --project PROJ --expand changelog --format json -o issues.json
 ```
 
 **Examples:**
 ```bash
 # Analyze state durations
-jira-tool analyze state-durations issues.json -o durations.csv
+temet-jira analyze state-durations issues.json -o durations.csv
 
 # View in terminal (no output file)
-jira-tool analyze state-durations issues.json
+temet-jira analyze state-durations issues.json
 ```
 
 **Output:**
@@ -413,6 +416,41 @@ CSV file with columns:
 - `state` - Workflow state name
 - `duration_calendar_days` - Days in state (calendar)
 - `duration_business_hours` - Hours in state (business hours only: 9 AM - 5 PM, weekdays)
+
+---
+
+### setup
+
+Interactive configuration wizard. Guides you through setting up your Jira credentials and saves them to `~/.config/temet-jira/config.yaml`.
+
+**Usage:**
+```bash
+temet-jira setup
+```
+
+---
+
+### types
+
+List available issue types for a project.
+
+**Usage:**
+```bash
+temet-jira types [OPTIONS]
+```
+
+**Options:**
+- `--project TEXT` - Project key (defaults to JIRA_DEFAULT_PROJECT)
+
+---
+
+### mcp
+
+Manage MCP server configuration.
+
+**Subcommands:**
+- `temet-jira mcp add` — Interactive setup: scans for existing config files and prints the correct JSON snippet for your MCP client (Claude Code, Cursor, Windsurf, VS Code, Zed)
+- `temet-jira mcp tools` — List all tools exposed by the MCP server
 
 ---
 
@@ -456,16 +494,16 @@ The tool supports multiple output formats:
 
 ```bash
 # Console viewing - use table (default)
-jira-tool search "project = PROJ"
+temet-jira search "project = PROJ"
 
 # Small dataset for analysis - use JSON
-jira-tool export --project PROJ --format json -o issues.json
+temet-jira export --project PROJ --format json -o issues.json
 
 # Spreadsheet import - use CSV
-jira-tool export --project PROJ --format csv -o issues.csv
+temet-jira export --project PROJ --format csv -o issues.csv
 
 # Large dataset (100+ issues) - use JSONL
-jira-tool export --project PROJ --all --format jsonl -o all_issues.jsonl
+temet-jira export --project PROJ --all --format jsonl -o all_issues.jsonl
 ```
 
 ---
@@ -555,19 +593,19 @@ sprint in openSprints()
 ### Examples
 ```bash
 # Active issues assigned to me
-jira-tool search "assignee = currentUser() AND status NOT IN (Done, Closed)"
+temet-jira search "assignee = currentUser() AND status NOT IN (Done, Closed)"
 
 # High priority bugs
-jira-tool search "project = PROJ AND type = Bug AND priority = High"
+temet-jira search "project = PROJ AND type = Bug AND priority = High"
 
 # Recent issues
-jira-tool search "project = PROJ AND created >= -7d"
+temet-jira search "project = PROJ AND created >= -7d"
 
 # Unassigned tasks
-jira-tool search "project = PROJ AND assignee is EMPTY AND type = Task"
+temet-jira search "project = PROJ AND assignee is EMPTY AND type = Task"
 
 # Issues in specific sprint
-jira-tool search "project = PROJ AND sprint = 'Sprint 10'"
+temet-jira search "project = PROJ AND sprint = 'Sprint 10'"
 ```
 
 ---
@@ -576,40 +614,40 @@ jira-tool search "project = PROJ AND sprint = 'Sprint 10'"
 
 ### Get Your Active Work
 ```bash
-jira-tool export --assignee "me" --status "In Progress"
+temet-jira export --assignee "me" --status "In Progress"
 ```
 
 ### Find High Priority Items
 ```bash
-jira-tool export --priority High --status "To Do"
+temet-jira export --priority High --status "To Do"
 ```
 
 ### Workflow Analysis
 ```bash
 # 1. Export with changelog
-jira-tool export --project PROJ --expand changelog --format json -o issues.json
+temet-jira export --project PROJ --expand changelog --format json -o issues.json
 
 # 2. Analyze state durations
-jira-tool analyze state-durations issues.json -o durations.csv
+temet-jira analyze state-durations issues.json -o durations.csv
 ```
 
 ### Generate Reports
 ```bash
 # Issues by assignee
-jira-tool export --group-by assignee --stats
+temet-jira export --group-by assignee --stats
 
 # Export for spreadsheet
-jira-tool export --project PROJ --all --format csv -o report.csv
+temet-jira export --project PROJ --all --format csv -o report.csv
 ```
 
 ### Bulk Operations
 ```bash
 # 1. Find issues to update
-jira-tool export --status "In Progress" --format json -o to_update.json
+temet-jira export --status "In Progress" --format json -o to_update.json
 
 # 2. Update each one
-jira-tool update PROJ-123 --status "Review"
-jira-tool update PROJ-124 --status "Review"
+temet-jira update PROJ-123 --status "Review"
+temet-jira update PROJ-124 --status "Review"
 ```
 
 ---

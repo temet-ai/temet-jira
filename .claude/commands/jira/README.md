@@ -13,8 +13,6 @@ Comprehensive guide to all available Jira slash commands for this project.
 - `/jira:epic-details <epic-key>` - View epic with child issues
 - `/jira:export <project>` - Export issues with filtering and formatting
 
-### Workflow Commands
-
 ### Create & Modify Commands
 - `/jira:create <summary>` - Create a basic issue (CLI-based)
 - `/jira:create-ticket <summary>` - Create issue with agent assistance (recommended)
@@ -105,36 +103,6 @@ Comprehensive guide to all available Jira slash commands for this project.
 ```
 
 **Shows**: Table of epics with keys, summaries, statuses, and dates
-
----
-
-### Workflow Commands
-
-**Description**: Complete workflow to start working on a Jira ticket
-
-**Usage**:
-```
-```
-
-**What it does**:
-1. Fetches ticket details from Jira
-2. Creates workspace at `artifacts/<TICKET_KEY>/`
-3. Determines target repository from ticket's Component field
-4. Checks repository git state (must be on clean main)
-5. Pulls latest code and creates feature branch using `cb` command
-6. Analyzes codebase against ticket requirements
-7. Creates detailed implementation plan in `planning.md`
-8. Creates todo list with file-by-file tasks
-9. Asks user to review before proceeding
-
-**Repository Mapping** (via Component field):
-- `your-service` → `repositories/your-repo/your-service`
-- `your-catalog-service` → `repositories/wtr-supplier-product/your-catalog-service`
-- `your-config-service` → `repositories/your-repo/your-config-service`
-
-**Branch naming**: `ddt/PROJ-<number>-<topic>` (via `cb` command)
-
-**Best For**: Starting fresh work on a ticket with full planning workflow
 
 ---
 

@@ -1,23 +1,22 @@
-# Getting Started with jira-tool
+# Getting Started with temet-jira
 
-Get up and running with jira-tool in 5 minutes.
+Get up and running with temet-jira in 5 minutes.
 
 ## 1. Install
 
+Install with uv (recommended):
 ```bash
-# Clone and install
-git clone <repository-url>
-cd jira-tool
-./scripts/build_and_install.sh
-
-# Verify
-jira-tool --help
+uv tool install temet-jira
 ```
 
-**Alternative (development mode):**
+Or with pipx:
 ```bash
-uv sync
-uv run jira-tool --help
+pipx install temet-jira
+```
+
+Verify:
+```bash
+temet-jira --help
 ```
 
 ## 2. Configure
@@ -27,7 +26,7 @@ uv run jira-tool --help
 Run the setup wizard - it will guide you through configuration:
 
 ```bash
-jira-tool setup
+temet-jira setup
 ```
 
 The wizard will:
@@ -36,7 +35,7 @@ The wizard will:
 3. Ask for your API token (get one at https://id.atlassian.com/manage-profile/security/api-tokens)
 4. Optionally set a default project
 5. Test the connection
-6. Save to `~/.config/jira-tool/config.yaml`
+6. Save to `~/.config/temet-jira/config.yaml`
 
 ### Option B: Manual Configuration
 
@@ -48,7 +47,7 @@ export JIRA_USERNAME="your-email@example.com"
 export JIRA_API_TOKEN="your-api-token"
 ```
 
-Or create `~/.config/jira-tool/config.yaml` directly:
+Or create `~/.config/temet-jira/config.yaml` directly:
 
 ```yaml
 base_url: https://your-company.atlassian.net
@@ -61,66 +60,66 @@ project: PROJ
 
 ```bash
 # View your config (tokens are masked)
-jira-tool config show
+temet-jira config show
 
 # Or just
-jira-tool config
+temet-jira config
 ```
 
 ## 3. Try It Out
 
 ```bash
 # Get a ticket
-jira-tool get PROJ-123
+temet-jira get PROJ-123
 
 # Search for tickets
-jira-tool search "project = PROJ AND status = Open"
+temet-jira search "project = PROJ AND status = Open"
 
 # Your active work
-jira-tool export --assignee "me" --status "In Progress"
+temet-jira export --assignee "me" --status "In Progress"
 
 # Export to CSV
-jira-tool export --project PROJ --format csv -o tickets.csv
+temet-jira export --project PROJ --format csv -o tickets.csv
 
 # Create a ticket
-jira-tool create --project PROJ --type Task --summary "My new task"
+temet-jira create --project PROJ --type Task --summary "My new task"
 ```
 
 ## 4. Quick Reference
 
 | Command | What it does |
 |---------|--------------|
-| `jira-tool setup` | Interactive configuration wizard |
-| `jira-tool config` | View current configuration |
-| `jira-tool get PROJ-123` | View ticket details |
-| `jira-tool search "JQL"` | Search with JQL |
-| `jira-tool create --project PROJ --type Task --summary "Title"` | Create ticket |
-| `jira-tool update PROJ-123 --status "Done"` | Update ticket |
-| `jira-tool comment PROJ-123 "message"` | Add comment |
-| `jira-tool export --project PROJ` | Export tickets |
-| `jira-tool epics --project PROJ` | List epics |
-| `jira-tool transitions PROJ-123` | Show available statuses |
+| `temet-jira setup` | Interactive configuration wizard |
+| `temet-jira config` | View current configuration |
+| `temet-jira get PROJ-123` | View ticket details |
+| `temet-jira search "JQL"` | Search with JQL |
+| `temet-jira create --project PROJ --type Task --summary "Title"` | Create ticket |
+| `temet-jira update PROJ-123 --status "Done"` | Update ticket |
+| `temet-jira comment PROJ-123 "message"` | Add comment |
+| `temet-jira export --project PROJ` | Export tickets |
+| `temet-jira epics --project PROJ` | List epics |
+| `temet-jira transitions PROJ-123` | Show available statuses |
 
 ## 5. Configuration Commands
 
 ```bash
 # View all config
-jira-tool config show
+temet-jira config show
 
 # Set a value
-jira-tool config set project PROJ
+temet-jira config set project PROJ
 
 # Get a specific value
-jira-tool config get base_url
+temet-jira config get base_url
 
 # Remove a value
-jira-tool config unset project
+temet-jira config unset project
 
 # Show config file path
-jira-tool config path
+temet-jira config path
 
 # Edit config file directly
-jira-tool config edit
+temet-jira config edit
 ```
 
 ## 6. Common Patterns
@@ -128,40 +127,40 @@ jira-tool config edit
 ### Your Daily Work
 ```bash
 # What am I working on?
-jira-tool export --assignee "me" --status "In Progress"
+temet-jira export --assignee "me" --status "In Progress"
 
 # What needs my attention?
-jira-tool search "assignee = currentUser() AND status NOT IN (Done, Closed)"
+temet-jira search "assignee = currentUser() AND status NOT IN (Done, Closed)"
 ```
 
 ### Team Overview
 ```bash
 # All open bugs
-jira-tool export --type Bug --jql "resolution = Unresolved"
+temet-jira export --type Bug --jql "resolution = Unresolved"
 
 # Work by assignee
-jira-tool export --group-by assignee --stats
+temet-jira export --group-by assignee --stats
 ```
 
 ### Export Data
 ```bash
 # To CSV (for Excel/Sheets)
-jira-tool export --project PROJ --format csv -o tickets.csv
+temet-jira export --project PROJ --format csv -o tickets.csv
 
 # To JSON (for processing)
-jira-tool export --project PROJ --format json -o tickets.json
+temet-jira export --project PROJ --format json -o tickets.json
 
 # Large datasets (100+ tickets)
-jira-tool export --project PROJ --all --format jsonl -o tickets.jsonl
+temet-jira export --project PROJ --all --format jsonl -o tickets.jsonl
 ```
 
 ### Workflow Analysis
 ```bash
 # Export with history
-jira-tool export --project PROJ --expand changelog --format json -o issues.json
+temet-jira export --project PROJ --expand changelog --format json -o issues.json
 
 # Analyze state durations
-jira-tool analyze state-durations issues.json -o durations.csv
+temet-jira analyze state-durations issues.json -o durations.csv
 ```
 
 ## 7. JQL Cheat Sheet
@@ -196,15 +195,17 @@ jira-tool analyze state-durations issues.json -o durations.csv
 If you're using Claude Code, you get slash commands:
 
 ```
-/get PROJ-123              # Get ticket
-/search "status = Open"    # Search
-/create --project PROJ ... # Create
-/export --project PROJ     # Export
+/jira:get PROJ-123              # Get ticket
+/jira:search "status = Open"    # Search
+/jira:create --project PROJ ... # Create
+/jira:export --project PROJ     # Export
+/jira:mcp                       # Manage MCP server configuration
 ```
 
 And skills for AI assistance:
 - `jira-api` - API reference
 - `jira-builders` - CLI patterns
+- `build-jira-document-format` - Advanced ADF document building
 - `work-with-adf` - Document formatting
 
 ## Next Steps
@@ -216,22 +217,22 @@ And skills for AI assistance:
 
 ## Troubleshooting
 
-**"Jira URL not configured"** - Run `jira-tool setup` or check your config:
+**"Jira URL not configured"** - Run `temet-jira setup` or check your config:
 ```bash
-jira-tool config show
+temet-jira config show
 ```
 
 **"401 Unauthorized"** - Your API token may be invalid or expired:
 - Generate a new token at https://id.atlassian.com/manage-profile/security/api-tokens
-- Run `jira-tool setup` to reconfigure
+- Run `temet-jira setup` to reconfigure
 
 **"404 Not Found"** - Check your base URL:
 ```bash
-jira-tool config get base_url
+temet-jira config get base_url
 ```
 
 **"403 Forbidden"** - You don't have permission to that project/ticket
 
 ---
 
-Questions? Run `jira-tool --help` or check the [full documentation](../../README.md).
+Questions? Run `temet-jira --help` or check the [full documentation](../../README.md).
