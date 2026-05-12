@@ -44,34 +44,29 @@ temet-jira get ISSUE_KEY [OPTIONS]
 - `ISSUE_KEY` - The issue key (e.g., PROJ-123)
 
 **Options:**
+- `--format {table,json,jsonl,csv}` - Output format (default: table)
+- `-o, --output FILE` - Write output to file
 - `--expand TEXT` - Expand additional fields (comma-separated: changelog, transitions)
+- `--comments` - Fetch and display comments
+- `--fields {standard,all}` - Field set to display (default: standard)
 
 **Examples:**
 ```bash
 # Get basic issue details
 temet-jira get PROJ-123
 
+# Export single issue as CSV
+temet-jira get PROJ-123 --format csv -o issue.csv
+
+# Export as JSON
+temet-jira get PROJ-123 --format json -o issue.json
+
 # Get issue with changelog
 temet-jira get PROJ-123 --expand changelog
 
-# Get issue with available transitions
-temet-jira get PROJ-123 --expand transitions
-
-# Get issue with multiple expansions
-temet-jira get PROJ-123 --expand changelog,transitions
+# Get all fields including custom
+temet-jira get PROJ-123 --fields all
 ```
-
-**Output:**
-Displays issue details including:
-- Key
-- Type
-- Status
-- Priority
-- Assignee
-- Reporter
-- Created/Updated dates
-- Description
-- Custom fields
 
 ---
 
@@ -393,7 +388,12 @@ temet-jira analyze state-durations INPUT_FILE [OPTIONS]
 - `INPUT_FILE` - JSON file with issues (must include changelog)
 
 **Options:**
-- `-o, --output FILE` - Output CSV file
+- `--format {csv,json,jsonl,table}` - Output format (default: from config, falls back to table)
+- `-o, --output FILE` - Write output to file (prints to console if omitted)
+- `--date-from YYYY-MM-DD` - Filter issues created on or after this date
+- `--date-to YYYY-MM-DD` - Filter issues created on or before this date
+- `--business-hours` - Calculate durations in business hours (9 AM–5 PM, weekdays)
+- `--timezone TEXT` - Timezone for business hours calculation (default: UTC)
 
 **Prerequisites:**
 Issues must be exported with `--expand changelog`:
@@ -403,19 +403,21 @@ temet-jira export --project PROJ --expand changelog --format json -o issues.json
 
 **Examples:**
 ```bash
-# Analyze state durations
+# Analyze and save as CSV
 temet-jira analyze state-durations issues.json -o durations.csv
 
-# View in terminal (no output file)
-temet-jira analyze state-durations issues.json
-```
+# View as table in terminal
+temet-jira analyze state-durations issues.json --format table
 
-**Output:**
-CSV file with columns:
-- `issue_key` - Issue key
-- `state` - Workflow state name
-- `duration_calendar_days` - Days in state (calendar)
-- `duration_business_hours` - Hours in state (business hours only: 9 AM - 5 PM, weekdays)
+# Export as JSON for further processing
+temet-jira analyze state-durations issues.json --format json -o durations.json
+
+# Filter by date range
+temet-jira analyze state-durations issues.json --date-from 2025-01-01 --date-to 2025-03-31 -o q1.csv
+
+# Business hours only
+temet-jira analyze state-durations issues.json --business-hours --timezone "Europe/London" -o durations.csv
+```
 
 ---
 
@@ -456,7 +458,7 @@ Manage MCP server configuration.
 
 ## Output Formats
 
-The tool supports multiple output formats:
+All commands that produce output (`get`, `search`, `epics`, `epic-details`, `export`, `analyze state-durations`) support the same four formats:
 
 | Format | Best For | File Extension |
 |--------|----------|----------------|
