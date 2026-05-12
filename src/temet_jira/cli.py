@@ -662,19 +662,51 @@ def create(
     type=int,
     help=f"Maximum number of epics to show (defaults to JIRA_DEFAULT_MAX_RESULTS env var, currently: {_get_default_max_results()})",
 )
-def epics(project: str, max_results: int | None) -> None:
+@click.option(
+    "--format",
+    "-f",
+    "output_format",
+    type=click.Choice(["table", "json", "jsonl", "csv"], case_sensitive=False),
+    default=get_default_format(),
+    help="Output format (table|json|jsonl|csv)",
+)
+@click.option("--output", "-o", help="Output file path (optional)")
+def epics(project: str, max_results: int | None, output_format: str, output: str | None) -> None:
     """List all epics in a project."""
     try:
         client = JiraClient()
 
         with console.status(f"Fetching epics for project {project}..."):
-            epics = client.get_epics(project, max_results)
+            issues = client.get_epics(project, max_results)
 
-        if epics:
-            format_issues_table(epics)
-            console.print(f"\n[dim]Found {len(epics)} epic(s) in {project}[/dim]")
-        else:
+        if not issues:
             console.print(f"[yellow]No epics found in project {project}[/yellow]")
+            return
+
+        if output_format == "json":
+            result = format_as_json(issues)
+            if output:
+                Path(output).write_text(result)
+                console.print(f"[green]✓[/green] Results saved to {output}")
+            else:
+                click.echo(result)
+        elif output_format == "csv":
+            result = format_as_csv(issues)
+            if output:
+                Path(output).write_text(result)
+                console.print(f"[green]✓[/green] Results saved to {output}")
+            else:
+                click.echo(result)
+        elif output_format == "jsonl":
+            result = format_as_jsonl(issues)
+            if output:
+                Path(output).write_text(result)
+                console.print(f"[green]✓[/green] Results saved to {output}")
+            else:
+                click.echo(result)
+        else:
+            format_issues_table(issues)
+            console.print(f"\n[dim]Found {len(issues)} epic(s) in {project}[/dim]")
 
     except Exception as e:
         console.print(f"[red]Error:[/red] {str(e)}")
@@ -686,30 +718,33 @@ def epics(project: str, max_results: int | None) -> None:
 @click.option(
     "--show-children", "-c", is_flag=True, help="Show child issues of the epic"
 )
-def epic_details(epic_key: str, show_children: bool) -> None:
+@click.option(
+    "--format",
+    "-f",
+    "output_format",
+    type=click.Choice(["table", "json", "jsonl", "csv"], case_sensitive=False),
+    default=get_default_format(),
+    help="Output format (table|json|jsonl|csv)",
+)
+@click.option("--output", "-o", help="Output file path (optional)")
+def epic_details(
+    epic_key: str, show_children: bool, output_format: str, output: str | None
+) -> None:
     """Get detailed information about an epic including child issues."""
     try:
         client = JiraClient()
 
-        # Get the epic details
         with console.status(f"Fetching epic {epic_key}..."):
             epic = client.get_issue(epic_key)
 
-        # Display epic details
-        format_issue(epic)
-
-        # If requested, show child issues
+        children: list[dict[str, Any]] = []
         if show_children:
-            console.print("\n[bold]Child Issues:[/bold]")
             with console.status("Fetching child issues..."):
-                # Try different queries for finding child issues
-                # Method 1: Using parent field (for newer Jira)
                 try:
                     children, _ = client.search_issues(
                         f"parent = {epic_key}", max_results=100
                     )
                 except Exception:
-                    # Method 2: Try with Epic Link custom field
                     try:
                         epic_link_field = client.get_epic_link_field()
                         if epic_link_field:
@@ -717,7 +752,6 @@ def epic_details(epic_key: str, show_children: bool) -> None:
                                 f"{epic_link_field} = {epic_key}", max_results=100
                             )
                         else:
-                            # Method 3: Try common Epic Link field name
                             children, _ = client.search_issues(
                                 f'"Epic Link" = {epic_key}', max_results=100
                             )
@@ -725,13 +759,40 @@ def epic_details(epic_key: str, show_children: bool) -> None:
                         console.print(
                             "[yellow]Unable to fetch child issues - epic link field may not be available[/yellow]"
                         )
-                        children = []
 
-            if children:
-                format_issues_table(children)
-                console.print(f"\n[dim]Found {len(children)} child issue(s)[/dim]")
+        if output_format == "json":
+            payload: list[dict[str, Any]] = [epic] + children
+            result = format_as_json(payload)
+            if output:
+                Path(output).write_text(result)
+                console.print(f"[green]✓[/green] Results saved to {output}")
             else:
-                console.print("[yellow]No child issues found[/yellow]")
+                click.echo(result)
+        elif output_format == "csv":
+            payload = [epic] + children
+            result = format_as_csv(payload)
+            if output:
+                Path(output).write_text(result)
+                console.print(f"[green]✓[/green] Results saved to {output}")
+            else:
+                click.echo(result)
+        elif output_format == "jsonl":
+            payload = [epic] + children
+            result = format_as_jsonl(payload)
+            if output:
+                Path(output).write_text(result)
+                console.print(f"[green]✓[/green] Results saved to {output}")
+            else:
+                click.echo(result)
+        else:
+            format_issue(epic)
+            if show_children:
+                if children:
+                    console.print("\n[bold]Child Issues:[/bold]")
+                    format_issues_table(children)
+                    console.print(f"\n[dim]Found {len(children)} child issue(s)[/dim]")
+                else:
+                    console.print("[yellow]No child issues found[/yellow]")
 
     except Exception as e:
         console.print(f"[red]Error:[/red] {str(e)}")
@@ -1108,9 +1169,18 @@ def analyze() -> None:
 @click.option(
     "--output",
     "-o",
-    required=True,
+    required=False,
+    default=None,
     type=click.Path(path_type=Path),
-    help="Output CSV file path",
+    help="Output file path (prints to console if omitted)",
+)
+@click.option(
+    "--format",
+    "-f",
+    "output_format",
+    type=click.Choice(["csv", "json", "jsonl", "table"], case_sensitive=False),
+    default=get_default_format(),
+    help="Output format (csv|json|jsonl|table)",
 )
 @click.option("--date-from", help="Start date filter (YYYY-MM-DD)")
 @click.option("--date-to", help="End date filter (YYYY-MM-DD)")
@@ -1120,7 +1190,8 @@ def analyze() -> None:
 )
 def state_durations(
     input_file: Path,
-    output: Path,
+    output: Path | None,
+    output_format: str,
     date_from: str | None,
     date_to: str | None,
     business_hours: bool,
@@ -1128,11 +1199,12 @@ def state_durations(
 ) -> None:
     """Analyze state durations for Jira issues from a JSON file.
 
-    Reads a JSON file containing Jira issues and calculates the time spent in each state.
-    Outputs the results to a CSV file.
+    Reads a JSON file containing Jira issues (exported with --expand changelog)
+    and calculates the time spent in each workflow state.
 
     Example:
         temet-jira analyze state-durations issues.json -o durations.csv
+        temet-jira analyze state-durations issues.json --format json
     """
     try:
         # Read the JSON file
@@ -1159,13 +1231,12 @@ def state_durations(
 
         if not issues_data:
             console.print("[yellow]Warning:[/yellow] No issues found in input file")
-            # Create empty output file
-            with open(output, "w", newline="") as f:
-                empty_writer = csv.writer(f)
-                empty_writer.writerow(
-                    ["issue_key", "summary", "current_status", "created", "updated"]
-                )
-            console.print(f"[green]✓[/green] Empty results saved to {output}")
+            if output:
+                with open(Path(output), "w", newline="") as f:
+                    csv.writer(f).writerow(
+                        ["issue_key", "summary", "current_status", "created", "updated"]
+                    )
+                console.print(f"[green]✓[/green] Empty results saved to {output}")
             return
 
         console.print(f"[dim]Found {len(issues_data)} issue(s) to analyze[/dim]")
@@ -1294,64 +1365,96 @@ def state_durations(
                         }
                     )
 
-        # Write results to CSV using the analyzer's format_as_csv method if available
-        with console.status(f"Writing results to {output}..."):
-            # Check if we have the new format with durations
-            if results and "durations" in results[0]:
-                # Use the new format_as_csv method
-                csv_output = analyzer.format_as_csv(
-                    results, include_business_hours=business_hours
-                )
-                output.write_text(csv_output)
+        # Build CSV string (shared by both csv format and table fallback)
+        def _build_csv(rows: list[dict[str, Any]]) -> str:
+            import io
+
+            buf = io.StringIO()
+            fieldnames: list[str] = [
+                "issue_key", "summary", "current_status", "created", "updated",
+            ]
+            if rows:
+                all_states: set[str] = set()
+                for r in rows:
+                    if isinstance(r.get("state_durations"), dict):
+                        all_states.update(r["state_durations"].keys())
+                for state in sorted(all_states):
+                    fieldnames.append(f"duration_{state}")
+
+            writer = csv.DictWriter(buf, fieldnames=fieldnames, extrasaction="ignore")
+            writer.writeheader()
+            for r in rows:
+                row: dict[str, Any] = {
+                    "issue_key": r.get("issue_key", ""),
+                    "summary": r.get("summary", ""),
+                    "current_status": r.get("current_status", ""),
+                    "created": r.get("created", ""),
+                    "updated": r.get("updated", ""),
+                }
+                if isinstance(r.get("state_durations"), dict):
+                    for state, duration in r["state_durations"].items():
+                        row[f"duration_{state}"] = duration
+                writer.writerow(row)
+            return buf.getvalue()
+
+        # Prefer analyzer's own CSV formatter when it supports durations
+        def _get_csv(rows: list[dict[str, Any]]) -> str:
+            if rows and "durations" in rows[0]:
+                return analyzer.format_as_csv(rows, include_business_hours=business_hours)
+            return _build_csv(rows)
+
+        def _write(text: str) -> None:
+            if output:
+                Path(output).write_text(text)
+                console.print(f"[green]✓[/green] Results saved to {output}")
             else:
-                # Fall back to the old format for backward compatibility
-                with open(output, "w", newline="") as csvfile:
-                    # Basic fields
-                    fieldnames: list[str] = [
-                        "issue_key",
-                        "summary",
-                        "current_status",
-                        "created",
-                        "updated",
-                    ]
+                click.echo(text)
 
-                    # Add state duration columns if available
-                    if results:
-                        all_states: set[str] = set()
-                        for result in results:
-                            if "state_durations" in result and isinstance(
-                                result["state_durations"], dict
-                            ):
-                                all_states.update(result["state_durations"].keys())
+        console.print(f"[green]✓[/green] Analyzed {len(results)} issue(s)")
 
-                        # Sort states for consistent column order
-                        for state in sorted(all_states):
-                            fieldnames.append(f"duration_{state}")
+        if output_format == "csv":
+            _write(_get_csv(results))
 
-                    dict_writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                    dict_writer.writeheader()
+        elif output_format == "json":
+            _write(json.dumps(results, indent=2, default=str))
 
-                    # Write rows
-                    for result in results:
-                        row: dict[str, Any] = {
-                            "issue_key": result.get("issue_key", ""),
-                            "summary": result.get("summary", ""),
-                            "current_status": result.get("current_status", ""),
-                            "created": result.get("created", ""),
-                            "updated": result.get("updated", ""),
-                        }
+        elif output_format == "jsonl":
+            _write("\n".join(json.dumps(r, default=str) for r in results))
 
-                        # Add state durations
-                        if "state_durations" in result and isinstance(
-                            result["state_durations"], dict
-                        ):
-                            for state, duration in result["state_durations"].items():
-                                row[f"duration_{state}"] = duration
+        else:  # table
+            from rich.table import Table
 
-                        dict_writer.writerow(row)
+            all_states_t: list[str] = []
+            if results:
+                seen: set[str] = set()
+                for r in results:
+                    if isinstance(r.get("state_durations"), dict):
+                        for s in r["state_durations"]:
+                            if s not in seen:
+                                seen.add(s)
+                                all_states_t.append(s)
 
-        console.print(f"[green]✓[/green] Successfully analyzed {len(results)} issue(s)")
-        console.print(f"[green]✓[/green] Results saved to {output}")
+            tbl = Table(show_header=True, header_style="bold cyan")
+            tbl.add_column("Key", style="bold")
+            tbl.add_column("Summary")
+            tbl.add_column("Status")
+            for s in sorted(all_states_t):
+                tbl.add_column(s)
+
+            for r in results:
+                durations = r.get("state_durations") or {}
+                tbl.add_row(
+                    r.get("issue_key", ""),
+                    r.get("summary", ""),
+                    r.get("current_status", ""),
+                    *[str(durations.get(s, "")) for s in sorted(all_states_t)],
+                )
+            console.print(tbl)
+            if output:
+                console.print(
+                    "[yellow]Note:[/yellow] Table format cannot be saved to file — "
+                    "use --format csv, json, or jsonl for file output."
+                )
 
     except click.Abort:
         # Already handled, just re-raise
