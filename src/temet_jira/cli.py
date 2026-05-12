@@ -1707,18 +1707,38 @@ def mcp_add() -> None:
         if path_str and Path(path_str).expanduser().exists():
             detected.append(i)
 
+    # Check if global Claude config (index 0) is among detected
+    global_detected = 0 in detected
+    local_detected = 1 in detected
+
     if detected:
-        console.print("[green]Detected existing config files:[/green]")
+        console.print("[green]Already configured in:[/green]")
         for i in detected:
-            label, path_str, _, _ = _MCP_TARGETS[i]
-            console.print(f"  [cyan]{i + 1}.[/cyan] {label}")
+            label, _, _, _ = _MCP_TARGETS[i]
+            console.print(f"  [green]✓[/green] {label}")
+
+        if global_detected and local_detected:
+            console.print(
+                "\n[yellow]Note:[/yellow] The global config already covers all projects — "
+                "the project-level config is redundant."
+            )
+
+        console.print(
+            "\n[dim]Run [bold]temet-jira mcp tools[/bold] for the list of available tools.[/dim]"
+        )
         console.print()
+        want_more = Prompt.ask(
+            "Add snippet for another client too?", choices=["y", "n"], default="n"
+        )
+        if want_more != "y":
+            return
 
     # Build choice list
-    console.print("[bold]Where do you want to install the MCP server?[/bold]")
+    console.print("\n[bold]Which client do you want the config snippet for?[/bold]")
+    console.print("[dim](You'll paste it into the file yourself.)[/dim]\n")
     for i, (label, _path_str, _, _) in enumerate(_MCP_TARGETS):
-        exists_marker = " [green](file exists)[/green]" if i in detected else ""
-        console.print(f"  [cyan]{i + 1}.[/cyan] {label}{exists_marker}")
+        already = " [green](already configured)[/green]" if i in detected else ""
+        console.print(f"  [cyan]{i + 1}.[/cyan] {label}{already}")
 
     console.print()
     raw = Prompt.ask(
@@ -1743,8 +1763,8 @@ def mcp_add() -> None:
     )
     if has_env:
         console.print(
-            "\n[green]✓[/green] JIRA_BASE_URL, JIRA_USERNAME, JIRA_API_TOKEN are already set "
-            "in your environment — the [bold]env[/bold] block is optional.\n"
+            "\n[green]✓[/green] JIRA_BASE_URL, JIRA_USERNAME, JIRA_API_TOKEN are set in your "
+            "environment — the [bold]env[/bold] block is optional.\n"
         )
         include_env_choice = Prompt.ask(
             "Include env block in snippet anyway?", choices=["y", "n"], default="n"
@@ -1755,31 +1775,29 @@ def mcp_add() -> None:
 
     snippet = _build_snippet(json_key, fmt, include_env)
 
-    # Show target file
+    # Show target file guidance
     if path_str:
         target = Path(path_str).expanduser()
         exists = target.exists()
-        console.print(f"\n[bold]Target file:[/bold] {target}")
+        console.print(f"\n[bold]File:[/bold] [cyan]{target}[/cyan]")
         if exists:
             console.print(
-                f"[yellow]↳ File exists — merge the snippet into the "
-                f'existing [cyan]"{json_key}"[/cyan] object.[/yellow]'
+                f"[dim]↳ File exists — merge the snippet into the "
+                f'existing [bold]"{json_key}"[/bold] object.[/dim]'
             )
         else:
             console.print(
                 "[yellow]↳ File does not exist — create it with the content below.[/yellow]"
             )
 
-    console.print("\n[bold]Add this to your config:[/bold]\n")
+    console.print("\n[bold]Paste this into your config:[/bold]\n")
 
     if path_str and not Path(path_str).expanduser().exists():
-        # Show full file for non-existent files
         full = "{\n  " + snippet + "\n}"
         console.print(f"[dim]# {Path(path_str).expanduser()}[/dim]")
         console.print(full)
     else:
-        # Show merge snippet only
-        console.print("[dim]# merge into your existing JSON:[/dim]")
+        console.print("[dim]# merge into your existing JSON[/dim]")
         console.print("{")
         console.print("  // ... your existing config ...")
         console.print("  " + snippet.replace("\n", "\n  "))
