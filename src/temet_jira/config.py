@@ -145,7 +145,7 @@ def get_all_config() -> dict[str, dict[str, Any]]:
         Dictionary mapping keys to {value, source} dicts.
     """
     file_config = load_config()
-    result = {}
+    result: dict[str, dict[str, str | None]] = {}
 
     for key in VALID_KEYS:
         env_var = ENV_VAR_MAP.get(key)

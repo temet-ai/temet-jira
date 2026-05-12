@@ -7,7 +7,7 @@ TypedBuilder via type profiles.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from temet_jira.document.builders.profiles import EMOJI_MAP, FIELD_LABELS
 from temet_jira.document.nodes.block import (
@@ -33,7 +33,7 @@ def header_panel(
     title: str,
     fields: dict[str, str],
     emoji: str,
-    panel_type: str,
+    panel_type: Literal["info", "note", "warning", "success", "error"],
 ) -> None:
     """Render a level-1 heading + key-value info panel.
 
