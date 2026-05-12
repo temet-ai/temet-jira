@@ -2,7 +2,7 @@
 
 from click.testing import CliRunner
 
-from jira_tool.cli import jira
+from temet_jira.cli import jira
 
 
 class TestJiraSearchIntegration:

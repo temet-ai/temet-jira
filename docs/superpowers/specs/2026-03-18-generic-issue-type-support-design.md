@@ -3,7 +3,7 @@
 ## Problem
 
 The jira-tool `create` command hardcodes support for three issue types (Task, Story, Bug) with
-a special path for Epics. The WPCW project alone has 21 issue types including Risk, Decision,
+a special path for Epics. The PROJ project alone has 21 issue types including Risk, Decision,
 Dependency, Policy, Spike, and more. The current builder architecture duplicates common patterns
 across `EpicBuilder`, `IssueBuilder`, and `SubtaskBuilder`, making it expensive to add new types.
 
@@ -360,7 +360,7 @@ If the new endpoint is not available (older Jira instances), fall back to the ol
 #### Updated `create` command
 
 ```
-jira-tool create --type Risk --summary "..." --project WPCW
+jira-tool create --type Risk --summary "..." --project PROJ
 ```
 
 Changes:
@@ -422,4 +422,4 @@ Ordered by actual dependency chain:
 8. `client.py` — update `get_issue_types()` to use new Jira API endpoint
 9. `cli.py` — add `types` command, update `create` routing + help text + type validation
 10. CLI tests
-11. Rebuild + manual test with real Jira (`jira-tool types WPCW`, `jira-tool get WPCW-629`)
+11. Rebuild + manual test with real Jira (`jira-tool types PROJ`, `jira-tool get PROJ-629`)

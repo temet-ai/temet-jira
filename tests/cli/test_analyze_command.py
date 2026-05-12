@@ -7,7 +7,7 @@ import pytest
 from click.testing import CliRunner
 
 # Import jira command from the CLI module
-from jira_tool.cli import jira
+from temet_jira.cli import jira
 
 
 class TestAnalyzeCommandGroup:
@@ -118,7 +118,7 @@ class TestAnalyzeCommandGroup:
         """Test state-durations with valid input file."""
         output_file = tmp_path / "output.csv"
 
-        with patch("jira_tool.cli.StateDurationAnalyzer") as mock_analyzer_class:
+        with patch("temet_jira.cli.StateDurationAnalyzer") as mock_analyzer_class:
             mock_analyzer = MagicMock()
             mock_analyzer_class.return_value = mock_analyzer
 
@@ -159,7 +159,7 @@ class TestAnalyzeCommandGroup:
         """Test state-durations with date range filters."""
         output_file = tmp_path / "output.csv"
 
-        with patch("jira_tool.cli.StateDurationAnalyzer") as mock_analyzer_class:
+        with patch("temet_jira.cli.StateDurationAnalyzer") as mock_analyzer_class:
             mock_analyzer = MagicMock()
             mock_analyzer_class.return_value = mock_analyzer
             # Mock the analyze_issues method to return some results instead of raising NotImplementedError
@@ -203,7 +203,7 @@ class TestAnalyzeCommandGroup:
         """Test state-durations with business hours calculation."""
         output_file = tmp_path / "output.csv"
 
-        with patch("jira_tool.cli.StateDurationAnalyzer") as mock_analyzer_class:
+        with patch("temet_jira.cli.StateDurationAnalyzer") as mock_analyzer_class:
             mock_analyzer = MagicMock()
             mock_analyzer_class.return_value = mock_analyzer
             mock_analyzer.analyze_issues_business_hours = MagicMock(
@@ -254,7 +254,7 @@ class TestAnalyzeCommandGroup:
         """Test state-durations with custom timezone."""
         output_file = tmp_path / "output.csv"
 
-        with patch("jira_tool.cli.StateDurationAnalyzer") as mock_analyzer_class:
+        with patch("temet_jira.cli.StateDurationAnalyzer") as mock_analyzer_class:
             mock_analyzer = MagicMock()
             mock_analyzer_class.return_value = mock_analyzer
             mock_analyzer.analyze_issues.return_value = []
@@ -327,7 +327,7 @@ class TestAnalyzeCommandGroup:
         issues_file.write_text(json.dumps(large_issues))
         output_file = tmp_path / "output.csv"
 
-        with patch("jira_tool.cli.StateDurationAnalyzer") as mock_analyzer_class:
+        with patch("temet_jira.cli.StateDurationAnalyzer") as mock_analyzer_class:
             mock_analyzer = MagicMock()
             mock_analyzer_class.return_value = mock_analyzer
             mock_analyzer.analyze_issues.return_value = []

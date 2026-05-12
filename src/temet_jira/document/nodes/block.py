@@ -2,7 +2,7 @@
 
 from typing import Any, Literal
 
-from jira_tool.document.nodes.base import BlockNode, Node
+from temet_jira.document.nodes.base import BlockNode, Node
 
 
 class Document(BlockNode):
@@ -73,7 +73,7 @@ class CodeBlock(BlockNode):
         return "codeBlock"
 
     def to_adf(self) -> dict[str, Any]:
-        from jira_tool.document.nodes.inline import Text
+        from temet_jira.document.nodes.inline import Text
 
         return {
             "type": self.type,

@@ -1,12 +1,12 @@
-"""Tests for jira-tool types command."""
+"""Tests for temet-jira types command."""
 
 from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner
-from jira_tool.cli import jira
+from temet_jira.cli import jira
 
 
-@patch("jira_tool.cli.JiraClient")
+@patch("temet_jira.cli.JiraClient")
 def test_types_command_displays_table(mock_client_cls):
     """types command shows issue types in a table."""
     mock_client = MagicMock()
@@ -18,14 +18,14 @@ def test_types_command_displays_table(mock_client_cls):
     mock_client_cls.return_value = mock_client
 
     runner = CliRunner()
-    result = runner.invoke(jira, ["types", "--project", "WPCW"])
+    result = runner.invoke(jira, ["types", "--project", "PROJ"])
     assert result.exit_code == 0
     assert "Task" in result.output
     assert "Risk" in result.output
     assert "Sub-task" in result.output
 
 
-@patch("jira_tool.cli.JiraClient")
+@patch("temet_jira.cli.JiraClient")
 def test_types_command_default_project(mock_client_cls):
     """types command uses JIRA_DEFAULT_PROJECT."""
     mock_client = MagicMock()

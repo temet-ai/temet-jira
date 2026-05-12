@@ -2,7 +2,7 @@
 
 import pytest
 
-from jira_tool.analysis.formatters import (
+from temet_jira.analysis.formatters import (
     format_as_table,
     format_duration,
 )
@@ -153,7 +153,7 @@ class TestFormatAsTable:
         """Test table formatting with a single issue."""
         from datetime import UTC, datetime
 
-        from jira_tool.analysis.state_analyzer import StateDuration
+        from temet_jira.analysis.state_analyzer import StateDuration
 
         analysis_results = [
             {
@@ -184,7 +184,7 @@ class TestFormatAsTable:
         """Test table formatting with multiple issues."""
         from datetime import UTC, datetime
 
-        from jira_tool.analysis.state_analyzer import StateDuration
+        from temet_jira.analysis.state_analyzer import StateDuration
 
         analysis_results = [
             {
@@ -228,7 +228,7 @@ class TestFormatAsTable:
         """Test table formatting with maximum width constraint."""
         from datetime import UTC, datetime
 
-        from jira_tool.analysis.state_analyzer import StateDuration
+        from temet_jira.analysis.state_analyzer import StateDuration
 
         analysis_results = [
             {
@@ -276,7 +276,7 @@ class TestFormatAsTable:
         """Test that table columns are properly aligned."""
         from datetime import UTC, datetime
 
-        from jira_tool.analysis.state_analyzer import StateDuration
+        from temet_jira.analysis.state_analyzer import StateDuration
 
         analysis_results = [
             {

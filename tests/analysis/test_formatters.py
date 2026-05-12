@@ -13,7 +13,7 @@ from fixtures.jira_data import (  # noqa: E402
     SAMPLE_ISSUE,
 )
 
-from jira_tool.analysis.formatters import (  # noqa: E402
+from temet_jira.analysis.formatters import (  # noqa: E402
     format_as_csv,
 )
 

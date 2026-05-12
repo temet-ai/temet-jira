@@ -1,4 +1,4 @@
-"""Behavioral tests for the jira-tool MCP server.
+"""Behavioral tests for the temet-jira MCP server.
 
 Tests verify that each MCP tool function:
 - Calls the correct JiraClient method with the right arguments
@@ -12,8 +12,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import jira_tool.mcp_server as mcp_server_module
-from jira_tool.mcp_server import (
+import temet_jira.mcp_server as mcp_server_module
+from temet_jira.mcp_server import (
     add_comment,
     create_issue,
     get_epics,
@@ -45,7 +45,7 @@ def reset_client_singleton():
 def mock_client():
     """Patch _get_client to return a fresh MagicMock for every test."""
     client = MagicMock()
-    with patch("jira_tool.mcp_server._get_client", return_value=client):
+    with patch("temet_jira.mcp_server._get_client", return_value=client):
         yield client
 
 
@@ -84,8 +84,8 @@ class TestToolRegistration:
         assert expected == tool_names
 
     def test_mcp_app_name(self):
-        """Server must be named 'jira-tool'."""
-        assert mcp.name == "jira-tool"
+        """Server must be named 'temet-jira'."""
+        assert mcp.name == "temet-jira"
 
 
 # ---------------------------------------------------------------------------
@@ -581,7 +581,7 @@ class TestClientSingleton:
                 "JIRA_API_TOKEN": "token",
             },
         ):
-            with patch("jira_tool.mcp_server.JiraClient") as MockClient:
+            with patch("temet_jira.mcp_server.JiraClient") as MockClient:
                 instance = MagicMock()
                 instance.get_issue.return_value = {}
                 instance.get_transitions.return_value = []

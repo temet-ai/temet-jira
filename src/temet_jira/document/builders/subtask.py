@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from jira_tool.document.builders.sections import (
+from temet_jira.document.builders.sections import (
     done_criteria_section,
     steps_section,
 )
-from jira_tool.document.builders.typed import TypedBuilder
-from jira_tool.document.nodes.block import (
+from temet_jira.document.builders.typed import TypedBuilder
+from temet_jira.document.nodes.block import (
     BulletList,
     CodeBlock,
     Heading,

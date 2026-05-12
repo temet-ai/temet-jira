@@ -1,6 +1,6 @@
 """Tests for type profiles and profile lookup."""
 
-from jira_tool.document.builders.profiles import (
+from temet_jira.document.builders.profiles import (
     EMOJI_MAP,
     FIELD_LABELS,
     TYPE_PROFILES,

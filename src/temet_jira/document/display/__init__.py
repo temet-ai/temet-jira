@@ -1,18 +1,18 @@
 """Terminal display formatting for Jira data using Rich library."""
 
-from jira_tool.document.display.formatters import (
+from temet_jira.document.display.formatters import (
     format_date,
     format_date_relative,
     get_priority,
     get_user_display,
     truncate_summary,
 )
-from jira_tool.document.display.panels import (
+from temet_jira.document.display.panels import (
     IssueHeaderBuilder,
     IssuePanelBuilder,
     format_issue,
 )
-from jira_tool.document.display.tables import (
+from temet_jira.document.display.tables import (
     IssueTableBuilder,
     ProjectTableBuilder,
     TransitionTableBuilder,

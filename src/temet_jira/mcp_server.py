@@ -5,7 +5,7 @@ AI agents over the stdio JSON-RPC transport. All output is structured
 JSON — no Rich formatting. Logging goes to stderr only.
 
 Usage:
-    Run via the ``jira-tool-mcp`` entry point (defined in pyproject.toml).
+    Run via the ``temet-jira-mcp`` entry point (defined in pyproject.toml).
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from typing import Any
 
 from fastmcp import FastMCP
 
-from jira_tool.client import JiraClient
+from temet_jira.client import JiraClient
 
 # ---------------------------------------------------------------------------
 # Logging — stderr only so stdout stays clean for JSON-RPC
@@ -26,13 +26,13 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
-logger = logging.getLogger("jira_tool.mcp_server")
+logger = logging.getLogger("temet_jira.mcp_server")
 
 # ---------------------------------------------------------------------------
 # FastMCP app
 # ---------------------------------------------------------------------------
 mcp = FastMCP(
-    "jira-tool",
+    "temet-jira",
     instructions="Jira Cloud MCP server — search, create, update, and manage issues",
 )
 
@@ -46,7 +46,7 @@ def _get_client() -> JiraClient:
     """Return (and lazily create) the shared JiraClient instance.
 
     Credentials are resolved via the standard chain:
-    env vars -> ``~/.config/jira-tool/config.yaml``.
+    env vars -> ``~/.config/temet-jira/config.yaml``.
     """
     global _client  # noqa: PLW0603
     if _client is None:
@@ -293,7 +293,7 @@ def get_issue_types(
 
 def main() -> None:
     """Run the MCP server over stdio."""
-    logger.info("Starting jira-tool MCP server")
+    logger.info("Starting temet-jira MCP server")
     mcp.run()
 
 

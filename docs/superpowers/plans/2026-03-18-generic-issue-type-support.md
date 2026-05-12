@@ -1513,7 +1513,7 @@ def test_get_issue_types_new_endpoint(jira_client, mock_response):
         ]
     }
     with patch.object(jira_client.session, "request", return_value=mock_response):
-        types = jira_client.get_issue_types("WPCW")
+        types = jira_client.get_issue_types("PROJ")
         assert len(types) == 2
         assert types[0]["name"] == "Task"
         assert types[1]["name"] == "Risk"
@@ -1535,7 +1535,7 @@ def test_get_issue_types_fallback(jira_client, mock_response):
     with patch.object(
         jira_client.session, "request", side_effect=[new_response, old_response]
     ):
-        types = jira_client.get_issue_types("WPCW")
+        types = jira_client.get_issue_types("PROJ")
         assert len(types) == 1
         assert types[0]["name"] == "Bug"
 ```
@@ -1638,7 +1638,7 @@ def test_types_command_displays_table(mock_client_cls):
     mock_client_cls.return_value = mock_client
 
     runner = CliRunner()
-    result = runner.invoke(jira, ["types", "--project", "WPCW"])
+    result = runner.invoke(jira, ["types", "--project", "PROJ"])
     assert result.exit_code == 0
     assert "Task" in result.output
     assert "Risk" in result.output
@@ -1676,9 +1676,9 @@ from jira_tool.cli import jira
 def test_create_risk_type(mock_client_cls):
     """create --type Risk uses TypedBuilder."""
     mock_client = MagicMock()
-    mock_client.create_issue.return_value = {"key": "WPCW-999"}
+    mock_client.create_issue.return_value = {"key": "PROJ-999"}
     mock_client.get_issue.return_value = {
-        "key": "WPCW-999",
+        "key": "PROJ-999",
         "fields": {"summary": "Test Risk", "issuetype": {"name": "Risk"},
                     "status": {"name": "New"}, "priority": {"name": "Medium"}},
     }
@@ -1686,10 +1686,10 @@ def test_create_risk_type(mock_client_cls):
 
     runner = CliRunner()
     result = runner.invoke(jira, [
-        "create", "-s", "Test Risk", "--type", "Risk", "--project", "WPCW",
+        "create", "-s", "Test Risk", "--type", "Risk", "--project", "PROJ",
     ])
     assert result.exit_code == 0
-    assert "WPCW-999" in result.output
+    assert "PROJ-999" in result.output
 
     # Verify issuetype was set correctly
     call_args = mock_client.create_issue.call_args
@@ -1891,12 +1891,12 @@ Expected: Successful install
 
 - [ ] **Step 4: Test types command with real Jira**
 
-Run: `jira-tool types WPCW`
+Run: `jira-tool types PROJ`
 Expected: Table showing all 21 issue types with Risk marked as having custom profile
 
 - [ ] **Step 5: Test get on risk item**
 
-Run: `jira-tool get WPCW-629`
+Run: `jira-tool get PROJ-629`
 Expected: Same output as before (no regression)
 
 - [ ] **Step 6: Commit if any fixes were needed**

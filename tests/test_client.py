@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from jira_tool.client import JiraClient
+from temet_jira.client import JiraClient
 from tests.conftest import TEST_JIRA_API_TOKEN, TEST_JIRA_BASE_URL, TEST_JIRA_USERNAME
 
 
@@ -265,7 +265,7 @@ class TestGetIssueTypes:
             ]
         }
         with patch.object(jira_client.session, "request", return_value=mock_response):
-            types = jira_client.get_issue_types("WPCW")
+            types = jira_client.get_issue_types("PROJ")
             assert len(types) == 2
             assert types[0]["name"] == "Task"
             assert types[1]["name"] == "Risk"
@@ -288,6 +288,6 @@ class TestGetIssueTypes:
         with patch.object(
             jira_client.session, "request", side_effect=[new_response, old_response]
         ):
-            types = jira_client.get_issue_types("WPCW")
+            types = jira_client.get_issue_types("PROJ")
             assert len(types) == 1
             assert types[0]["name"] == "Bug"

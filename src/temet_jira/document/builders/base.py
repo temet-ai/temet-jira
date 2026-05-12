@@ -2,8 +2,8 @@
 
 from typing import Any, Literal
 
-from jira_tool.document.nodes.base import Node
-from jira_tool.document.nodes.block import (
+from temet_jira.document.nodes.base import Node
+from temet_jira.document.nodes.block import (
     Blockquote,
     BulletList,
     CodeBlock,
@@ -20,7 +20,7 @@ from jira_tool.document.nodes.block import (
     TableHeader,
     TableRow,
 )
-from jira_tool.document.nodes.inline import (
+from temet_jira.document.nodes.inline import (
     Date,
     Emoji,
     HardBreak,
@@ -29,7 +29,7 @@ from jira_tool.document.nodes.inline import (
     Status,
     Text,
 )
-from jira_tool.document.nodes.marks import (
+from temet_jira.document.nodes.marks import (
     BackgroundColor,
     Code,
     Em,
@@ -232,7 +232,7 @@ class DocumentBuilder:
             panel_type: Panel style
             field_labels: Map of field_name -> "emoji Label" display string
         """
-        from jira_tool.document.builders.profiles import FIELD_LABELS as DEFAULT_LABELS
+        from temet_jira.document.builders.profiles import FIELD_LABELS as DEFAULT_LABELS
 
         labels = field_labels or DEFAULT_LABELS
         self._content.append(Heading(f"{emoji} {title}", level=1))

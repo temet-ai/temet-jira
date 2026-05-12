@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from jira_tool.analysis.state_analyzer import (
+from temet_jira.analysis.state_analyzer import (
     StateDurationAnalyzer,
 )
 

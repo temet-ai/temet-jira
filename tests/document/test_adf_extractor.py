@@ -1,7 +1,7 @@
 """Tests for ADF text extraction."""
 
 
-from jira_tool.document.adf import extract_text_from_adf
+from temet_jira.document.adf import extract_text_from_adf
 
 
 class TestExtractTextFromAdf:

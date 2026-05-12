@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 
 from click.testing import CliRunner
 
-from jira_tool.cli import search
+from temet_jira.cli import search
 
 
 class TestJiraCliFormatterE2E:
@@ -114,7 +114,7 @@ class TestJiraCliFormatterE2E:
             },
         ]
 
-    @patch("jira_tool.cli.JiraClient")
+    @patch("temet_jira.cli.JiraClient")
     def test_json_formatter_with_complex_data(self, mock_client_class):
         """Test JSON formatter handles complex nested data correctly."""
         mock_client_class.return_value = self.mock_client
@@ -143,7 +143,7 @@ class TestJiraCliFormatterE2E:
             assert data[1]["fields"]["priority"] is None
             assert data[1]["fields"]["assignee"] is None
 
-    @patch("jira_tool.cli.JiraClient")
+    @patch("temet_jira.cli.JiraClient")
     def test_csv_formatter_with_complex_data(self, mock_client_class):
         """Test CSV formatter handles complex nested data with flattening."""
         mock_client_class.return_value = self.mock_client
@@ -179,7 +179,7 @@ class TestJiraCliFormatterE2E:
             # Check that labels are handled (joined with semicolon)
             assert any("security;backend;oauth" in str(v) for v in first_row.values())
 
-    @patch("jira_tool.cli.JiraClient")
+    @patch("temet_jira.cli.JiraClient")
     def test_json_formatter_console_output(self, mock_client_class):
         """Test JSON formatter outputs to console correctly."""
         mock_client_class.return_value = self.mock_client
@@ -195,7 +195,7 @@ class TestJiraCliFormatterE2E:
         assert output_data[0]["key"] == "PROJ-123"
         assert output_data[1]["key"] == "PROJ-124"
 
-    @patch("jira_tool.cli.JiraClient")
+    @patch("temet_jira.cli.JiraClient")
     def test_csv_formatter_console_output(self, mock_client_class):
         """Test CSV formatter outputs to console correctly."""
         mock_client_class.return_value = self.mock_client
@@ -214,7 +214,7 @@ class TestJiraCliFormatterE2E:
         assert any("PROJ-123" in str(row.values()) for row in rows)
         assert any("PROJ-124" in str(row.values()) for row in rows)
 
-    @patch("jira_tool.cli.JiraClient")
+    @patch("temet_jira.cli.JiraClient")
     def test_handles_empty_results(self, mock_client_class):
         """Test formatters handle empty result sets gracefully."""
         mock_client_class.return_value = self.mock_client
@@ -234,7 +234,7 @@ class TestJiraCliFormatterE2E:
         assert result.exit_code == 0
         assert "No issues found" in result.output
 
-    @patch("jira_tool.cli.JiraClient")
+    @patch("temet_jira.cli.JiraClient")
     def test_large_dataset_with_all_flag(self, mock_client_class):
         """Test handling large datasets with --all flag and progress indicator."""
         mock_client_class.return_value = self.mock_client
@@ -274,7 +274,7 @@ class TestJiraCliFormatterE2E:
             expected_count = len(all_issues)
             assert len(data) == expected_count
 
-    @patch("jira_tool.cli.JiraClient")
+    @patch("temet_jira.cli.JiraClient")
     def test_special_characters_in_csv(self, mock_client_class):
         """Test CSV formatter handles special characters and CSV injection."""
         mock_client_class.return_value = self.mock_client

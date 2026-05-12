@@ -6,7 +6,7 @@ import json
 import pytest
 from click.testing import CliRunner
 
-from jira_tool.cli import jira as cli
+from temet_jira.cli import jira as cli
 
 
 class TestJiraAnalyzeCommand:

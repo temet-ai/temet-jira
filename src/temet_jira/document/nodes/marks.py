@@ -2,7 +2,7 @@
 
 from typing import Any, Literal
 
-from jira_tool.document.nodes.base import Mark
+from temet_jira.document.nodes.base import Mark
 
 
 class Strong(Mark):

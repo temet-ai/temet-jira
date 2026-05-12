@@ -6,7 +6,7 @@ import pytest
 def test_analysis_module_imports():
     """Test that all analysis module components can be imported."""
     # Test direct imports from analysis module
-    from jira_tool.analysis import (
+    from temet_jira.analysis import (
         StateDurationAnalyzer,
         format_as_csv,
         format_as_json,
@@ -19,7 +19,7 @@ def test_analysis_module_imports():
 
 def test_parent_module_imports():
     """Test that analysis components are accessible from parent jira module."""
-    from jira_tool import (
+    from temet_jira import (
         StateDurationAnalyzer,
         format_as_csv,
         format_as_json,
@@ -32,7 +32,7 @@ def test_parent_module_imports():
 
 def test_state_analyzer_initialization():
     """Test that StateDurationAnalyzer can be instantiated."""
-    from jira_tool.analysis import StateDurationAnalyzer
+    from temet_jira.analysis import StateDurationAnalyzer
 
     analyzer = StateDurationAnalyzer()
     assert analyzer is not None
@@ -48,7 +48,7 @@ def test_formatters_basic_functionality():
     """Test basic functionality of formatter functions."""
     import json
 
-    from jira_tool.analysis import format_as_csv, format_as_json
+    from temet_jira.analysis import format_as_csv, format_as_json
 
     # Test with empty data
     empty_json = format_as_json([])
@@ -75,7 +75,7 @@ def test_formatters_basic_functionality():
 
 def test_format_duration_helper():
     """Test the format_duration helper function."""
-    from jira_tool.analysis.formatters import format_duration
+    from temet_jira.analysis.formatters import format_duration
 
     # Test various duration formats
     assert format_duration(0) == "0m"
@@ -87,7 +87,7 @@ def test_format_duration_helper():
 
 def test_not_implemented_methods():
     """Test that placeholder methods raise NotImplementedError."""
-    from jira_tool.analysis import StateDurationAnalyzer
+    from temet_jira.analysis import StateDurationAnalyzer
 
     analyzer = StateDurationAnalyzer()
 

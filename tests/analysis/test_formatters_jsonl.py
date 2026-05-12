@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from jira_tool.analysis.formatters import format_as_jsonl
+from temet_jira.analysis.formatters import format_as_jsonl
 
 
 class TestFormatAsJsonl:

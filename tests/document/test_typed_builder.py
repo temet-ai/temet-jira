@@ -1,7 +1,7 @@
 """Tests for TypedBuilder."""
 
 import pytest
-from jira_tool.document.builders.typed import TypedBuilder
+from temet_jira.document.builders.typed import TypedBuilder
 
 
 def _content(builder: TypedBuilder) -> list[dict]:

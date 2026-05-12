@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from jira_tool.analysis.state_analyzer import (
+from temet_jira.analysis.state_analyzer import (
     StateDurationAnalyzer,
     StateTransition,
 )
@@ -628,7 +628,7 @@ class TestFormatAsCSV:
 
     def test_format_csv_with_results(self, analyzer):
         """Test CSV formatting with analysis results."""
-        from jira_tool.analysis.state_analyzer import StateDuration
+        from temet_jira.analysis.state_analyzer import StateDuration
 
         results = [
             {
@@ -672,7 +672,7 @@ class TestFormatAsCSV:
 
     def test_format_csv_with_business_hours(self, analyzer):
         """Test CSV formatting with business hours included."""
-        from jira_tool.analysis.state_analyzer import StateDuration
+        from temet_jira.analysis.state_analyzer import StateDuration
 
         results = [
             {

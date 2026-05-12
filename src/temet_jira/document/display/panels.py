@@ -7,8 +7,8 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from jira_tool.document.adf import extract_text_from_adf
-from jira_tool.document.display.formatters import (
+from temet_jira.document.adf import extract_text_from_adf
+from temet_jira.document.display.formatters import (
     format_date,
     format_date_relative,
     get_priority,

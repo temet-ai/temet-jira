@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 
 from click.testing import CliRunner
 
-from jira_tool.cli import search
+from temet_jira.cli import search
 
 
 class TestJiraSearchOptions:
@@ -43,7 +43,7 @@ class TestJiraSearchOptions:
             },
         ]
 
-    @patch("jira_tool.cli.JiraClient")
+    @patch("temet_jira.cli.JiraClient")
     def test_search_with_fields_option(self, mock_client_class):
         """Test search command with --fields option."""
         mock_client_class.return_value = self.mock_client
@@ -61,7 +61,7 @@ class TestJiraSearchOptions:
             expand=None,
         )
 
-    @patch("jira_tool.cli.JiraClient")
+    @patch("temet_jira.cli.JiraClient")
     def test_search_with_expand_option(self, mock_client_class):
         """Test search command with --expand option."""
         mock_client_class.return_value = self.mock_client
@@ -79,7 +79,7 @@ class TestJiraSearchOptions:
             expand=["changelog", "transitions"],
         )
 
-    @patch("jira_tool.cli.JiraClient")
+    @patch("temet_jira.cli.JiraClient")
     def test_search_with_output_file_json(self, mock_client_class):
         """Test search command with --output and --format json."""
         mock_client_class.return_value = self.mock_client
@@ -101,7 +101,7 @@ class TestJiraSearchOptions:
                 assert data[0]["key"] == "TEST-1"
                 assert data[1]["key"] == "TEST-2"
 
-    @patch("jira_tool.cli.JiraClient")
+    @patch("temet_jira.cli.JiraClient")
     def test_search_with_output_file_csv(self, mock_client_class):
         """Test search command with --output and --format csv."""
         mock_client_class.return_value = self.mock_client
@@ -124,8 +124,8 @@ class TestJiraSearchOptions:
                 # Check that it contains some expected field names (flattened format)
                 assert "key" in content.lower() or "fields.summary" in content.lower()
 
-    @patch("jira_tool.cli.JiraClient")
-    @patch("jira_tool.cli.format_issues_table")
+    @patch("temet_jira.cli.JiraClient")
+    @patch("temet_jira.cli.format_issues_table")
     def test_search_with_format_table_default(
         self, mock_format_table, mock_client_class
     ):
@@ -138,7 +138,7 @@ class TestJiraSearchOptions:
         assert result.exit_code == 0
         mock_format_table.assert_called_once_with(self.mock_issues)
 
-    @patch("jira_tool.cli.JiraClient")
+    @patch("temet_jira.cli.JiraClient")
     def test_search_with_all_option(self, mock_client_class):
         """Test search command with --all option to fetch all results."""
         mock_client_class.return_value = self.mock_client
@@ -153,7 +153,7 @@ class TestJiraSearchOptions:
         # Should have called search_all_issues once
         self.mock_client.search_all_issues.assert_called_once()
 
-    @patch("jira_tool.cli.JiraClient")
+    @patch("temet_jira.cli.JiraClient")
     def test_search_with_invalid_format(self, mock_client_class):
         """Test search command with invalid --format option."""
         mock_client_class.return_value = self.mock_client
@@ -164,7 +164,7 @@ class TestJiraSearchOptions:
         assert result.exit_code != 0
         assert "Invalid value" in result.output or "invalid" in result.output.lower()
 
-    @patch("jira_tool.cli.JiraClient")
+    @patch("temet_jira.cli.JiraClient")
     def test_search_with_multiple_options(self, mock_client_class):
         """Test search command with multiple options combined."""
         mock_client_class.return_value = self.mock_client
@@ -199,7 +199,7 @@ class TestJiraSearchOptions:
             # Check output file
             assert Path("results.json").exists()
 
-    @patch("jira_tool.cli.JiraClient")
+    @patch("temet_jira.cli.JiraClient")
     def test_search_format_json_to_console(self, mock_client_class):
         """Test search command with --format json without output file."""
         mock_client_class.return_value = self.mock_client
@@ -215,7 +215,7 @@ class TestJiraSearchOptions:
         json_output = json.loads(result.output.strip())
         assert len(json_output) == 2
 
-    @patch("jira_tool.cli.JiraClient")
+    @patch("temet_jira.cli.JiraClient")
     def test_search_format_csv_to_console(self, mock_client_class):
         """Test search command with --format csv without output file."""
         mock_client_class.return_value = self.mock_client
@@ -232,7 +232,7 @@ class TestJiraSearchOptions:
         lines = result.output.strip().split("\n")
         assert len(lines) >= 3  # Header + 2 data rows
 
-    @patch("jira_tool.cli.JiraClient")
+    @patch("temet_jira.cli.JiraClient")
     def test_search_empty_fields_and_expand(self, mock_client_class):
         """Test search command with empty --fields and --expand options."""
         mock_client_class.return_value = self.mock_client
@@ -250,7 +250,7 @@ class TestJiraSearchOptions:
             expand=None,  # Empty string should be treated as None
         )
 
-    @patch("jira_tool.cli.JiraClient")
+    @patch("temet_jira.cli.JiraClient")
     def test_search_with_all_and_max_results(self, mock_client_class):
         """Test that --all option overrides --max-results."""
         mock_client_class.return_value = self.mock_client

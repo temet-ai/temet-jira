@@ -5,7 +5,7 @@ from typing import Any, Self
 from rich.console import Console
 from rich.table import Table
 
-from jira_tool.document.display.formatters import (
+from temet_jira.document.display.formatters import (
     format_date,
     format_date_relative,
     get_priority,

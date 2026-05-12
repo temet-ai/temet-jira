@@ -3,7 +3,7 @@
 import json
 from datetime import UTC, datetime
 
-from jira_tool.analysis.formatters import format_as_json
+from temet_jira.analysis.formatters import format_as_json
 
 
 def test_format_real_jira_response():

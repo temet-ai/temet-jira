@@ -1,7 +1,7 @@
 """Tests for composable section functions."""
 
-from jira_tool.document.builders.base import DocumentBuilder
-from jira_tool.document.builders.sections import (
+from temet_jira.document.builders.base import DocumentBuilder
+from temet_jira.document.builders.sections import (
     acceptance_criteria_section,
     acceptance_rationale_section,
     description_section,

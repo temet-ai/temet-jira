@@ -4,18 +4,18 @@ This module provides backward-compatible re-exports from the refactored
 document.display and document.adf submodules.
 
 For new code, prefer importing directly from:
-- `jira_tool.document.display` for Rich terminal formatting
-- `jira_tool.document.adf` for ADF text extraction
-- `jira_tool.document` for ADF document building
+- `temet_jira.document.display` for Rich terminal formatting
+- `temet_jira.document.adf` for ADF text extraction
+- `temet_jira.document` for ADF document building
 """
 
 from typing import Any
 
 # Re-export ADF extractor
-from jira_tool.document.adf import extract_text_from_adf
+from temet_jira.document.adf import extract_text_from_adf
 
 # Re-export document builders for backward compatibility
-from jira_tool.document.builders import (
+from temet_jira.document.builders import (
     DocumentBuilder,
     EpicBuilder,
     IssueBuilder,
@@ -23,7 +23,7 @@ from jira_tool.document.builders import (
 )
 
 # Re-export display functions
-from jira_tool.document.display import (
+from temet_jira.document.display import (
     IssuePanelBuilder,
     IssueTableBuilder,
     ProjectTableBuilder,

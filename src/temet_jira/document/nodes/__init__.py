@@ -1,7 +1,7 @@
 """ADF node types for building Atlassian Document Format documents."""
 
-from jira_tool.document.nodes.base import Mark, Node
-from jira_tool.document.nodes.block import (
+from temet_jira.document.nodes.base import Mark, Node
+from temet_jira.document.nodes.block import (
     Blockquote,
     BulletList,
     CodeBlock,
@@ -22,7 +22,7 @@ from jira_tool.document.nodes.block import (
     TableHeader,
     TableRow,
 )
-from jira_tool.document.nodes.inline import (
+from temet_jira.document.nodes.inline import (
     Date,
     Emoji,
     HardBreak,
@@ -31,7 +31,7 @@ from jira_tool.document.nodes.inline import (
     Status,
     Text,
 )
-from jira_tool.document.nodes.marks import (
+from temet_jira.document.nodes.marks import (
     BackgroundColor,
     Code,
     Em,

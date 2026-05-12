@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 from rich.table import Table
 
-from jira_tool.document.display.tables import (
+from temet_jira.document.display.tables import (
     CompactIssueTableBuilder,
     IssueTableBuilder,
     ProjectTableBuilder,
@@ -186,7 +186,7 @@ class TestTransitionTableBuilder:
 class TestFormatIssuesTable:
     """Tests for format_issues_table function."""
 
-    @patch("jira_tool.document.display.tables.console")
+    @patch("temet_jira.document.display.tables.console")
     def test_empty_list_shows_message(self, mock_console) -> None:
         """Empty issues list shows 'No issues found' message."""
         format_issues_table([])
@@ -194,13 +194,13 @@ class TestFormatIssuesTable:
         call_args = str(mock_console.print.call_args)
         assert "No issues found" in call_args
 
-    @patch("jira_tool.document.display.tables.console")
+    @patch("temet_jira.document.display.tables.console")
     def test_prints_table(self, mock_console, sample_issues: list[dict]) -> None:
         """Valid issues list prints table to console."""
         format_issues_table(sample_issues)
         mock_console.print.assert_called()
 
-    @patch("jira_tool.document.display.tables.console")
+    @patch("temet_jira.document.display.tables.console")
     def test_max_results_exceeded_shows_message(self, mock_console) -> None:
         """When max_results exceeded, shows message."""
         issues = [
@@ -211,7 +211,7 @@ class TestFormatIssuesTable:
         calls = [str(c) for c in mock_console.print.call_args_list]
         assert any("Showing first 50 results" in c for c in calls)
 
-    @patch("jira_tool.document.display.tables.console")
+    @patch("temet_jira.document.display.tables.console")
     def test_custom_max_results(self, mock_console, sample_issues: list[dict]) -> None:
         """Custom max_results is respected."""
         format_issues_table(sample_issues, max_results=1)
@@ -221,7 +221,7 @@ class TestFormatIssuesTable:
 class TestFormatProjectsTable:
     """Tests for format_projects_table function."""
 
-    @patch("jira_tool.document.display.tables.console")
+    @patch("temet_jira.document.display.tables.console")
     def test_prints_table(self, mock_console, sample_projects: list[dict]) -> None:
         """Valid projects list prints table to console."""
         format_projects_table(sample_projects)
@@ -231,7 +231,7 @@ class TestFormatProjectsTable:
 class TestFormatTransitionsTable:
     """Tests for format_transitions_table function."""
 
-    @patch("jira_tool.document.display.tables.console")
+    @patch("temet_jira.document.display.tables.console")
     def test_prints_table(self, mock_console, sample_transitions: list[dict]) -> None:
         """Valid transitions list prints table to console."""
         format_transitions_table(sample_transitions)

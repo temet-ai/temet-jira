@@ -6,8 +6,8 @@ This module provides:
 - Rich terminal display formatters for Jira data
 
 Example (building ADF):
-    from jira_tool.document import Document, Paragraph, Text, Heading
-    from jira_tool.document.marks import Strong, Link
+    from temet_jira.document import Document, Paragraph, Text, Heading
+    from temet_jira.document.marks import Strong, Link
 
     doc = Document(
         Heading("Welcome", level=1),
@@ -19,17 +19,17 @@ Example (building ADF):
     adf = doc.to_adf()
 
 Example (extracting text from ADF):
-    from jira_tool.document.adf import extract_text_from_adf
+    from temet_jira.document.adf import extract_text_from_adf
     text = extract_text_from_adf(adf_content)
 
 Example (terminal display):
-    from jira_tool.document.display import format_issue, IssuePanelBuilder
+    from temet_jira.document.display import format_issue, IssuePanelBuilder
     format_issue(issue)  # Print to console
     panel = IssuePanelBuilder(issue).add_all_standard().build()
 """
 
-from jira_tool.document.adf import extract_text_from_adf
-from jira_tool.document.builders import (
+from temet_jira.document.adf import extract_text_from_adf
+from temet_jira.document.builders import (
     DocumentBuilder,
     EpicBuilder,
     IssueBuilder,
@@ -39,7 +39,7 @@ from jira_tool.document.builders import (
     header_row,
     row,
 )
-from jira_tool.document.display import (
+from temet_jira.document.display import (
     IssuePanelBuilder,
     IssueTableBuilder,
     ProjectTableBuilder,
@@ -54,8 +54,8 @@ from jira_tool.document.display import (
     get_user_display,
     truncate_summary,
 )
-from jira_tool.document.nodes.base import Mark, Node
-from jira_tool.document.nodes.block import (
+from temet_jira.document.nodes.base import Mark, Node
+from temet_jira.document.nodes.block import (
     Blockquote,
     BulletList,
     CodeBlock,
@@ -76,7 +76,7 @@ from jira_tool.document.nodes.block import (
     TableHeader,
     TableRow,
 )
-from jira_tool.document.nodes.inline import (
+from temet_jira.document.nodes.inline import (
     Date,
     Emoji,
     HardBreak,
@@ -85,7 +85,7 @@ from jira_tool.document.nodes.inline import (
     Status,
     Text,
 )
-from jira_tool.document.nodes.marks import (
+from temet_jira.document.nodes.marks import (
     BackgroundColor,
     Code,
     Em,

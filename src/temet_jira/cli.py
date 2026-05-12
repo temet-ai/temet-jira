@@ -513,7 +513,7 @@ def types(project: str) -> None:
 
         from rich.table import Table
 
-        from jira_tool.document.builders.profiles import TYPE_PROFILES
+        from temet_jira.document.builders.profiles import TYPE_PROFILES
 
         table = Table(title=f"Issue Types — {project}")
         table.add_column("Name", style="cyan", no_wrap=True)
@@ -541,7 +541,7 @@ def types(project: str) -> None:
     "-t",
     "issue_type",
     default="Task",
-    help="Issue type — run 'jira-tool types' to see available types",
+    help="Issue type — run 'temet-jira types' to see available types",
 )
 @click.option("--epic", "-e", help="Epic key to link to (e.g., PROJ-123)")
 @click.option("--priority", "-p", help="Priority (Highest, High, Medium, Low, Lowest)")
@@ -778,22 +778,22 @@ def export_cmd(
     Examples:
 
         # Export using default project from .env
-        jira-tool export --format csv -o tickets.csv
+        temet-jira export --format csv -o tickets.csv
 
         # Export specific project
-        jira-tool export --project PROJ --format csv -o tickets.csv
+        temet-jira export --project PROJ --format csv -o tickets.csv
 
         # Export all tickets to JSONL
-        jira-tool export -p PROJ --all --format jsonl -o all_tickets.jsonl
+        temet-jira export -p PROJ --all --format jsonl -o all_tickets.jsonl
 
         # Get high priority tickets with statistics
-        jira-tool export --priority High --stats
+        temet-jira export --priority High --stats
 
         # Export filtered tickets grouped by assignee
-        jira-tool export --status "In Progress" --group-by assignee
+        temet-jira export --status "In Progress" --group-by assignee
 
         # Use custom JQL query
-        jira-tool export --jql "assignee = currentUser()" --format json -o my_tickets.json
+        temet-jira export --jql "assignee = currentUser()" --format json -o my_tickets.json
     """
     try:
         client = JiraClient()
@@ -1094,7 +1094,7 @@ def state_durations(
     Outputs the results to a CSV file.
 
     Example:
-        jira-tool analyze state-durations issues.json -o durations.csv
+        temet-jira analyze state-durations issues.json -o durations.csv
     """
     try:
         # Read the JSON file
@@ -1330,18 +1330,18 @@ def state_durations(
 
 @jira.command()
 def setup() -> None:
-    """Interactive setup wizard for jira-tool configuration.
+    """Interactive setup wizard for temet-jira configuration.
 
     Guides you through configuring your Jira credentials and saves them
-    to ~/.config/jira-tool/config.yaml for future use.
+    to ~/.config/temet-jira/config.yaml for future use.
     """
     from rich.panel import Panel
 
     console.print()
     console.print(
         Panel.fit(
-            "[bold blue]jira-tool Setup Wizard[/bold blue]\n\n"
-            "This will help you configure jira-tool with your Jira credentials.\n"
+            "[bold blue]temet-jira Setup Wizard[/bold blue]\n\n"
+            "This will help you configure temet-jira with your Jira credentials.\n"
             f"Configuration will be saved to: [cyan]{get_config_path()}[/cyan]",
             border_style="blue",
         )
@@ -1350,7 +1350,7 @@ def setup() -> None:
 
     # Check if already configured
     if is_configured():
-        console.print("[yellow]⚠️  jira-tool is already configured.[/yellow]")
+        console.print("[yellow]⚠️  temet-jira is already configured.[/yellow]")
         console.print()
         existing = get_all_config()
         console.print("[dim]Current configuration:[/dim]")
@@ -1459,16 +1459,16 @@ def setup() -> None:
     console.print("[bold green]Setup complete![/bold green]")
     console.print()
     console.print("Try these commands:")
-    console.print("  [cyan]jira-tool config[/cyan]        - View your configuration")
+    console.print("  [cyan]temet-jira config[/cyan]        - View your configuration")
     if project:
-        console.print(f"  [cyan]jira-tool export[/cyan]        - Export tickets from {project}")
-    console.print("  [cyan]jira-tool search \"status = Open\"[/cyan]  - Search for issues")
+        console.print(f"  [cyan]temet-jira export[/cyan]        - Export tickets from {project}")
+    console.print("  [cyan]temet-jira search \"status = Open\"[/cyan]  - Search for issues")
     console.print()
 
 
 @jira.group(name="config")
 def config_cmd() -> None:
-    """View and manage jira-tool configuration."""
+    """View and manage temet-jira configuration."""
     pass
 
 
@@ -1483,10 +1483,10 @@ def config_show() -> None:
         console.print("[yellow]No configuration found.[/yellow]")
         console.print(f"[dim]Config file location: {get_config_path()}[/dim]")
         console.print()
-        console.print("Run [cyan]jira-tool setup[/cyan] to configure.")
+        console.print("Run [cyan]temet-jira setup[/cyan] to configure.")
         return
 
-    table = Table(title="jira-tool Configuration", show_header=True)
+    table = Table(title="temet-jira Configuration", show_header=True)
     table.add_column("Setting", style="cyan")
     table.add_column("Value")
     table.add_column("Source", style="dim")
@@ -1507,7 +1507,7 @@ def config_set(key: str, value: str) -> None:
     """Set a configuration value.
 
     Example:
-        jira-tool config set project PROJ
+        temet-jira config set project PROJ
     """
     try:
         set_value(key, value)
@@ -1528,7 +1528,7 @@ def config_get(key: str) -> None:
     """Get a configuration value.
 
     Example:
-        jira-tool config get base_url
+        temet-jira config get base_url
     """
     value = get_value(key)
     if value:
@@ -1545,7 +1545,7 @@ def config_unset(key: str) -> None:
     """Remove a configuration value.
 
     Example:
-        jira-tool config unset project
+        temet-jira config unset project
     """
     if delete_value(key):
         console.print(f"[green]✓[/green] Removed {key}")
@@ -1573,7 +1573,7 @@ def config_edit() -> None:
 
     if not config_exists():
         console.print("[yellow]Config file does not exist yet.[/yellow]")
-        console.print("Run [cyan]jira-tool setup[/cyan] first, or create it manually.")
+        console.print("Run [cyan]temet-jira setup[/cyan] first, or create it manually.")
         return
 
     editor = os.environ.get("EDITOR", "nano")
@@ -1586,7 +1586,7 @@ def config_edit() -> None:
         console.print(f"[red]Error:[/red] Editor exited with error: {e}")
 
 
-# Make 'jira-tool config' with no subcommand show the config
+# Make 'temet-jira config' with no subcommand show the config
 @config_cmd.result_callback()
 @click.pass_context
 def config_default(ctx: click.Context, *args: Any, **kwargs: Any) -> None:

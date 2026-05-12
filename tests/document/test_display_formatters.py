@@ -1,7 +1,7 @@
 """Tests for display formatting functions."""
 
 
-from jira_tool.document.display.formatters import (
+from temet_jira.document.display.formatters import (
     format_date,
     format_date_relative,
     get_priority,

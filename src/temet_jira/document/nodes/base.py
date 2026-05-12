@@ -50,7 +50,7 @@ class Node(ABC):
                 content.append(child)
             elif isinstance(child, str):
                 # Auto-wrap strings in Text nodes
-                from jira_tool.document.nodes.inline import Text
+                from temet_jira.document.nodes.inline import Text
 
                 content.append(Text(child).to_adf())
         return content

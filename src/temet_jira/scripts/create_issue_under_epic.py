@@ -13,8 +13,8 @@ import os
 import sys
 from typing import Any
 
-from jira_tool.client import JiraClient
-from jira_tool.document import DocumentBuilder
+from temet_jira.client import JiraClient
+from temet_jira.document import DocumentBuilder
 
 
 def create_issue_under_epic(

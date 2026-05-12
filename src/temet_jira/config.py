@@ -1,6 +1,6 @@
-"""Configuration management for jira-tool.
+"""Configuration management for temet-jira.
 
-Supports global config file (~/.config/jira-tool/config.yaml) with fallback to environment variables.
+Supports global config file (~/.config/temet-jira/config.yaml) with fallback to environment variables.
 """
 
 import os
@@ -10,7 +10,7 @@ from typing import Any
 import yaml
 
 # Config file location (follows XDG Base Directory spec)
-CONFIG_DIR = Path.home() / ".config" / "jira-tool"
+CONFIG_DIR = Path.home() / ".config" / "temet-jira"
 CONFIG_FILE = CONFIG_DIR / "config.yaml"
 
 # Valid configuration keys

@@ -4,10 +4,10 @@ Tests structural equivalence: same node types in same order with same text.
 Not byte-for-byte ADF JSON identity.
 """
 
-from jira_tool.document.builders.epic import EpicBuilder
-from jira_tool.document.builders.issue import IssueBuilder
-from jira_tool.document.builders.subtask import SubtaskBuilder
-from jira_tool.document.builders.typed import TypedBuilder
+from temet_jira.document.builders.epic import EpicBuilder
+from temet_jira.document.builders.issue import IssueBuilder
+from temet_jira.document.builders.subtask import SubtaskBuilder
+from temet_jira.document.builders.typed import TypedBuilder
 
 
 def _node_types(adf: dict) -> list[str]:

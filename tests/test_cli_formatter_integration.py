@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 
 from click.testing import CliRunner
 
-from jira_tool.cli import search
+from temet_jira.cli import search
 
 
 class TestJiraCliFormatterIntegration:
@@ -53,8 +53,8 @@ class TestJiraCliFormatterIntegration:
             },
         ]
 
-    @patch("jira_tool.cli.JiraClient")
-    @patch("jira_tool.cli.format_as_json")
+    @patch("temet_jira.cli.JiraClient")
+    @patch("temet_jira.cli.format_as_json")
     def test_uses_json_formatter_when_format_json(
         self, mock_format_json, mock_client_class
     ):
@@ -71,8 +71,8 @@ class TestJiraCliFormatterIntegration:
         # Output should contain the formatted JSON
         assert '{"test": "json"}' in result.output
 
-    @patch("jira_tool.cli.JiraClient")
-    @patch("jira_tool.cli.format_as_csv")
+    @patch("temet_jira.cli.JiraClient")
+    @patch("temet_jira.cli.format_as_csv")
     def test_uses_csv_formatter_when_format_csv(
         self, mock_format_csv, mock_client_class
     ):
@@ -90,8 +90,8 @@ class TestJiraCliFormatterIntegration:
         assert "Key,Summary" in result.output
         assert "TEST-1,Test Issue 1" in result.output
 
-    @patch("jira_tool.cli.JiraClient")
-    @patch("jira_tool.cli.format_as_json")
+    @patch("temet_jira.cli.JiraClient")
+    @patch("temet_jira.cli.format_as_json")
     def test_writes_json_to_file_when_output_specified(
         self, mock_format_json, mock_client_class
     ):
@@ -119,8 +119,8 @@ class TestJiraCliFormatterIntegration:
             assert "✓" in result.output
             assert "results.json" in result.output
 
-    @patch("jira_tool.cli.JiraClient")
-    @patch("jira_tool.cli.format_as_csv")
+    @patch("temet_jira.cli.JiraClient")
+    @patch("temet_jira.cli.format_as_csv")
     def test_writes_csv_to_file_when_output_specified(
         self, mock_format_csv, mock_client_class
     ):
@@ -147,8 +147,8 @@ class TestJiraCliFormatterIntegration:
             assert "✓" in result.output
             assert "results.csv" in result.output
 
-    @patch("jira_tool.cli.JiraClient")
-    @patch("jira_tool.cli.format_issues_table")
+    @patch("temet_jira.cli.JiraClient")
+    @patch("temet_jira.cli.format_issues_table")
     def test_table_format_warns_when_output_specified(
         self, mock_format_table, mock_client_class
     ):
@@ -170,8 +170,8 @@ class TestJiraCliFormatterIntegration:
             # File should NOT be created
             assert not Path("results.txt").exists()
 
-    @patch("jira_tool.cli.JiraClient")
-    @patch("jira_tool.cli.console")
+    @patch("temet_jira.cli.JiraClient")
+    @patch("temet_jira.cli.console")
     def test_shows_progress_for_large_fetches_with_all(
         self, mock_console, mock_client_class
     ):
@@ -194,8 +194,8 @@ class TestJiraCliFormatterIntegration:
         status_calls = mock_console.status.call_args_list
         assert any("Fetching all issues" in str(call) for call in status_calls)
 
-    @patch("jira_tool.cli.JiraClient")
-    @patch("jira_tool.cli.format_as_json")
+    @patch("temet_jira.cli.JiraClient")
+    @patch("temet_jira.cli.format_as_json")
     def test_handles_file_write_error_gracefully(
         self, mock_format_json, mock_client_class
     ):
@@ -217,8 +217,8 @@ class TestJiraCliFormatterIntegration:
             assert result.exit_code != 0
             assert "Error" in result.output
 
-    @patch("jira_tool.cli.JiraClient")
-    @patch("jira_tool.cli.format_as_json")
+    @patch("temet_jira.cli.JiraClient")
+    @patch("temet_jira.cli.format_as_json")
     def test_formatter_error_handling(self, mock_format_json, mock_client_class):
         """Test that formatter errors are handled gracefully."""
         mock_client_class.return_value = self.mock_client
@@ -231,9 +231,9 @@ class TestJiraCliFormatterIntegration:
         assert result.exit_code != 0
         assert "Error" in result.output
 
-    @patch("jira_tool.cli.JiraClient")
-    @patch("jira_tool.cli.format_as_json")
-    @patch("jira_tool.cli.click.echo")
+    @patch("temet_jira.cli.JiraClient")
+    @patch("temet_jira.cli.format_as_json")
+    @patch("temet_jira.cli.click.echo")
     def test_json_output_to_stdout_uses_click_echo(
         self, mock_echo, mock_format_json, mock_client_class
     ):
@@ -248,9 +248,9 @@ class TestJiraCliFormatterIntegration:
         # Should have called click.echo with the formatted JSON
         mock_echo.assert_called_with('{"test": "json"}')
 
-    @patch("jira_tool.cli.JiraClient")
-    @patch("jira_tool.cli.format_as_csv")
-    @patch("jira_tool.cli.click.echo")
+    @patch("temet_jira.cli.JiraClient")
+    @patch("temet_jira.cli.format_as_csv")
+    @patch("temet_jira.cli.click.echo")
     def test_csv_output_to_stdout_uses_click_echo(
         self, mock_echo, mock_format_csv, mock_client_class
     ):
@@ -265,7 +265,7 @@ class TestJiraCliFormatterIntegration:
         # Should have called click.echo with the formatted CSV
         mock_echo.assert_called_with("Key,Summary\nTEST-1,Test Issue 1\n")
 
-    @patch("jira_tool.cli.JiraClient")
+    @patch("temet_jira.cli.JiraClient")
     def test_real_json_formatting_integration(self, mock_client_class):
         """Test real JSON formatting without mocking the formatter."""
         mock_client_class.return_value = self.mock_client
@@ -280,7 +280,7 @@ class TestJiraCliFormatterIntegration:
         assert output_data[0]["key"] == "TEST-1"
         assert output_data[1]["key"] == "TEST-2"
 
-    @patch("jira_tool.cli.JiraClient")
+    @patch("temet_jira.cli.JiraClient")
     def test_real_csv_formatting_integration(self, mock_client_class):
         """Test real CSV formatting without mocking the formatter."""
         mock_client_class.return_value = self.mock_client
@@ -297,7 +297,7 @@ class TestJiraCliFormatterIntegration:
         assert any("TEST-1" in str(row.values()) for row in rows)
         assert any("TEST-2" in str(row.values()) for row in rows)
 
-    @patch("jira_tool.cli.JiraClient")
+    @patch("temet_jira.cli.JiraClient")
     def test_progress_messages_with_all_option(self, mock_client_class):
         """Test that progress messages are shown during pagination."""
         mock_client_class.return_value = self.mock_client

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from jira_tool.document.builders.base import DocumentBuilder
-from jira_tool.document.builders.profiles import get_profile
-from jira_tool.document.builders.sections import SECTION_REGISTRY, header_panel
+from temet_jira.document.builders.base import DocumentBuilder
+from temet_jira.document.builders.profiles import get_profile
+from temet_jira.document.builders.sections import SECTION_REGISTRY, header_panel
 
 
 class TypedBuilder(DocumentBuilder):

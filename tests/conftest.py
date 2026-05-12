@@ -1,10 +1,10 @@
-"""Shared test fixtures for jira-tool tests."""
+"""Shared test fixtures for temet-jira tests."""
 
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from jira_tool.client import JiraClient
+from temet_jira.client import JiraClient
 
 # Test configuration constants - change these in one place for all tests
 TEST_JIRA_BASE_URL = "https://test.atlassian.net"

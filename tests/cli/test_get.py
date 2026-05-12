@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from click.testing import CliRunner
 
-from jira_tool.cli import jira
+from temet_jira.cli import jira
 
 
 MOCK_ISSUE = {
@@ -26,7 +26,7 @@ class TestGetCommand:
     @pytest.fixture
     def mock_client(self):
         """Create a mocked JiraClient."""
-        with patch("jira_tool.cli.JiraClient") as mock_cls:
+        with patch("temet_jira.cli.JiraClient") as mock_cls:
             client_instance = MagicMock()
             client_instance.get_issue.return_value = MOCK_ISSUE
             client_instance.get_comments.return_value = [
@@ -46,7 +46,7 @@ class TestGetCommand:
 
     def test_get_default_table_format(self, runner, mock_client):
         """Test get command with default table format calls format_issue."""
-        with patch("jira_tool.cli.format_issue") as mock_format:
+        with patch("temet_jira.cli.format_issue") as mock_format:
             result = runner.invoke(jira, ["get", "TEST-1"])
 
             assert result.exit_code == 0
@@ -76,7 +76,7 @@ class TestGetCommand:
 
     def test_get_with_expand(self, runner, mock_client):
         """Test get command with --expand option."""
-        with patch("jira_tool.cli.format_issue"):
+        with patch("temet_jira.cli.format_issue"):
             result = runner.invoke(
                 jira, ["get", "TEST-1", "--expand", "changelog,transitions"]
             )
@@ -88,7 +88,7 @@ class TestGetCommand:
 
     def test_get_with_comments_flag(self, runner, mock_client):
         """Test get command with --comments flag fetches comments."""
-        with patch("jira_tool.cli.format_issue") as mock_format:
+        with patch("temet_jira.cli.format_issue") as mock_format:
             result = runner.invoke(jira, ["get", "TEST-1", "--comments"])
 
             assert result.exit_code == 0

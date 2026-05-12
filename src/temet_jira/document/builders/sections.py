@@ -9,8 +9,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from jira_tool.document.builders.profiles import EMOJI_MAP, FIELD_LABELS
-from jira_tool.document.nodes.block import (
+from temet_jira.document.builders.profiles import EMOJI_MAP, FIELD_LABELS
+from temet_jira.document.nodes.block import (
     BulletList,
     Heading,
     OrderedList,
@@ -21,11 +21,11 @@ from jira_tool.document.nodes.block import (
     TableHeader,
     TableRow,
 )
-from jira_tool.document.nodes.inline import Text
-from jira_tool.document.nodes.marks import Strong
+from temet_jira.document.nodes.inline import Text
+from temet_jira.document.nodes.marks import Strong
 
 if TYPE_CHECKING:
-    from jira_tool.document.builders.base import DocumentBuilder
+    from temet_jira.document.builders.base import DocumentBuilder
 
 
 def header_panel(

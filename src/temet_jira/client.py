@@ -44,7 +44,7 @@ class JiraClient:
         Credentials are resolved in this order:
         1. Explicit arguments passed to __init__
         2. Environment variables (JIRA_BASE_URL, JIRA_USERNAME, JIRA_API_TOKEN)
-        3. Config file (~/.config/jira-tool/config.yaml)
+        3. Config file (~/.config/temet-jira/config.yaml)
 
         Args:
             base_url: Jira instance URL
@@ -60,11 +60,11 @@ class JiraClient:
 
         if not resolved_base_url:
             raise ValueError(
-                "Jira URL not configured. Run 'jira-tool setup' or set JIRA_BASE_URL"
+                "Jira URL not configured. Run 'temet-jira setup' or set JIRA_BASE_URL"
             )
         if not resolved_username or not resolved_api_token:
             raise ValueError(
-                "Jira credentials not configured. Run 'jira-tool setup' or set JIRA_USERNAME and JIRA_API_TOKEN"
+                "Jira credentials not configured. Run 'temet-jira setup' or set JIRA_USERNAME and JIRA_API_TOKEN"
             )
 
         self.base_url = resolved_base_url

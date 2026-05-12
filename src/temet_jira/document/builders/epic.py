@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jira_tool.document.builders.sections import (
+from temet_jira.document.builders.sections import (
     acceptance_criteria_section,
     description_section,
     edge_cases_section,
@@ -12,8 +12,8 @@ from jira_tool.document.builders.sections import (
     success_metrics_section,
     testing_considerations_section,
 )
-from jira_tool.document.builders.typed import TypedBuilder
-from jira_tool.document.nodes.block import CodeBlock
+from temet_jira.document.builders.typed import TypedBuilder
+from temet_jira.document.nodes.block import CodeBlock
 
 
 class EpicBuilder(TypedBuilder):
