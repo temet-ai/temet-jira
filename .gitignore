@@ -53,5 +53,5 @@ Thumbs.db
 # Project specific
 *.log
 /.jbeval/
-/.github/
+
 .claude/
