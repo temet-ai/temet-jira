@@ -98,9 +98,9 @@ def jira() -> None:
     "--format",
     "-f",
     "output_format",
-    type=click.Choice(["json", "jsonl", "table"], case_sensitive=False),
+    type=click.Choice(["json", "jsonl", "csv", "table"], case_sensitive=False),
     default=get_default_format(),
-    help="Output format (json|jsonl|table)",
+    help="Output format (json|jsonl|csv|table)",
 )
 @click.option("--output", "-o", help="Output file path (optional)")
 @click.option(
@@ -159,6 +159,13 @@ def get(
                 click.echo(formatted)
         elif output_format == "jsonl":
             formatted = format_as_jsonl([issue])
+            if output:
+                Path(output).write_text(formatted)
+                console.print(f"[green]✓[/green] Issue saved to {output}")
+            else:
+                click.echo(formatted)
+        elif output_format == "csv":
+            formatted = format_as_csv([issue])
             if output:
                 Path(output).write_text(formatted)
                 console.print(f"[green]✓[/green] Issue saved to {output}")
