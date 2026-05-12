@@ -147,19 +147,19 @@ Add it to your `~/.claude.json` MCP configuration to expose Jira tools directly 
 
 ## Claude Code Integration
 
-Slash commands are available in `.claude/commands/` when working inside this repository:
+Slash commands are available in `.claude/commands/jira/` — use with the `/jira:` prefix in Claude Code:
 
 | Command | Description |
 |---------|-------------|
-| `/get PROJ-123` | Get ticket details |
-| `/search "JQL query"` | Search with JQL |
-| `/create` | Create an issue |
-| `/update PROJ-123` | Update an issue |
-| `/comment PROJ-123 "message"` | Add a comment |
-| `/export` | Export issues |
-| `/epics` | List epics |
-| `/epic-details PROJ-123` | Epic with children |
-| `/transitions PROJ-123` | Show transitions |
+| `/jira:get PROJ-123` | Get ticket details |
+| `/jira:search "JQL query"` | Search with JQL |
+| `/jira:create` | Create an issue |
+| `/jira:update PROJ-123` | Update an issue |
+| `/jira:comment PROJ-123 "message"` | Add a comment |
+| `/jira:export` | Export issues |
+| `/jira:epics` | List epics |
+| `/jira:epic-details PROJ-123` | Epic with children |
+| `/jira:transitions PROJ-123` | Show transitions |
 
 Skills in `.claude/skills/` provide reference documentation for Claude:
 
