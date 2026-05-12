@@ -22,6 +22,7 @@ from .config import (
     delete_value,
     get_all_config,
     get_config_path,
+    get_default_format,
     get_value,
     is_configured,
     mask_sensitive,
@@ -98,8 +99,8 @@ def jira() -> None:
     "-f",
     "output_format",
     type=click.Choice(["json", "jsonl", "table"], case_sensitive=False),
-    default="table",
-    help="Output format (json|jsonl|table) — default: table",
+    default=get_default_format(),
+    help="Output format (json|jsonl|table)",
 )
 @click.option("--output", "-o", help="Output file path (optional)")
 @click.option(
@@ -385,8 +386,8 @@ def comment(issue_key: str, message: str | None, adf: Path | None) -> None:
     "-f",
     "output_format",
     type=click.Choice(["json", "csv", "jsonl", "table"], case_sensitive=False),
-    default="table",
-    help="Output format (json|csv|jsonl|table) - default: table",
+    default=get_default_format(),
+    help="Output format (json|csv|jsonl|table)",
 )
 @click.option(
     "--all", "fetch_all", is_flag=True, help="Fetch all results (bypass limit)"
@@ -767,8 +768,8 @@ def epic_details(epic_key: str, show_children: bool) -> None:
     "-f",
     "output_format",
     type=click.Choice(["table", "json", "csv", "jsonl"], case_sensitive=False),
-    default="table",
-    help="Output format (default: table)",
+    default=get_default_format(),
+    help="Output format (table|json|csv|jsonl)",
 )
 @click.option(
     "--output", "-o", help="Output file path (required for json/csv/jsonl formats)"

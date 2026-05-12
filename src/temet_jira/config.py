@@ -21,6 +21,7 @@ VALID_KEYS = {
     "project": "Project key (e.g., PROJ)",
     "component": "Component filter",
     "max_results": "Max results per query (default: 300)",
+    "default_format": "Default output format: table, json, jsonl, csv (default: table)",
 }
 
 # Mapping from config keys to environment variable names
@@ -31,7 +32,18 @@ ENV_VAR_MAP = {
     "project": "JIRA_DEFAULT_PROJECT",
     "component": "JIRA_DEFAULT_COMPONENT",
     "max_results": "JIRA_DEFAULT_MAX_RESULTS",
+    "default_format": "JIRA_DEFAULT_FORMAT",
 }
+
+
+_VALID_FORMATS = {"table", "json", "jsonl", "csv"}
+
+
+def get_default_format() -> str:
+    """Return the configured default output format, falling back to 'table'."""
+    raw = os.environ.get("JIRA_DEFAULT_FORMAT") or load_config().get("default_format", "table")
+    value = str(raw).lower()
+    return value if value in _VALID_FORMATS else "table"
 
 
 def get_config_path() -> Path:
