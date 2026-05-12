@@ -1,6 +1,6 @@
 [project]
 name = "temet-jira"
-version = "0.1.0a1"
+version = "0.1.0a2"
 description = "Comprehensive Jira API client and CLI tool"
 readme = "README.md"
 requires-python = ">=3.11"
