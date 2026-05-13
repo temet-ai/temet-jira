@@ -1,6 +1,8 @@
 import os
 import sys
+
 from rich.console import Console
+
 from .theme import THEME
 
 

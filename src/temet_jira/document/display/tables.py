@@ -5,7 +5,6 @@ from typing import Any, Self
 from rich.table import Table
 
 from temet_jira.document.display.formatters import (
-    format_date,
     format_date_relative,
     get_priority,
     get_user_display,

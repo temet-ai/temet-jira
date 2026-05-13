@@ -3,8 +3,6 @@
 In interactive mode (TTY): arrow-key navigation via questionary.
 In non-interactive mode (pipes, CI, --no-interactive): numbered prompts via click.
 """
-import sys
-from typing import Any
 
 import click
 
