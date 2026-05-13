@@ -638,3 +638,68 @@ class JiraClient:
         url = f"{self.base_url}/rest/api/3/myself"
         response = self._request("GET", url)
         return cast(dict[str, Any], response.json())
+
+    def get_boards(self, project_key: str | None = None) -> list[dict[str, Any]]:
+        """Get boards, optionally filtered by project.
+
+        Returns:
+            List of board objects
+        """
+        url = f"{self.base_url}/rest/agile/1.0/board"
+        params: dict[str, Any] = {"maxResults": 50}
+        if project_key:
+            params["projectKeyOrId"] = project_key
+        response = self._request("GET", url, params=params)
+        data = cast(dict[str, Any], response.json())
+        return cast(list[dict[str, Any]], data.get("values", []))
+
+    def get_active_sprint(self, board_id: int) -> dict[str, Any] | None:
+        """Get the active sprint for a board.
+
+        Returns:
+            Active sprint object or None if no active sprint
+        """
+        url = f"{self.base_url}/rest/agile/1.0/board/{board_id}/sprint"
+        params = {"state": "active"}
+        response = self._request("GET", url, params=params)
+        data = cast(dict[str, Any], response.json())
+        sprints = cast(list[dict[str, Any]], data.get("values", []))
+        return sprints[0] if sprints else None
+
+    def get_backlog_count(self, board_id: int) -> int:
+        """Get the number of issues in a board's backlog.
+
+        Returns:
+            Count of backlog issues
+        """
+        url = f"{self.base_url}/rest/agile/1.0/board/{board_id}/backlog"
+        params = {"maxResults": 0}
+        response = self._request("GET", url, params=params)
+        data = cast(dict[str, Any], response.json())
+        return cast(int, data.get("total", 0))
+
+    def get_components(self, project_key: str) -> list[dict[str, Any]]:
+        """Get components for a project.
+
+        Returns:
+            List of component objects with id, name, description
+        """
+        url = f"{self.base_url}/rest/api/3/project/{project_key}/components"
+        response = self._request("GET", url)
+        return cast(list[dict[str, Any]], response.json())
+
+    def get_labels_used(self, project_key: str, max_issues: int = 100) -> list[str]:
+        """Get labels actually used in a project by sampling recent issues.
+
+        Returns:
+            Sorted list of unique label strings
+        """
+        jql = f"project = {project_key} AND labels is not EMPTY ORDER BY updated DESC"
+        issues, _ = self.search_issues(jql, fields=["labels"], max_results=max_issues)
+        seen: set[str] = set()
+        for issue in issues:
+            fields = issue.get("fields") or {}
+            for label in fields.get("labels") or []:
+                if label:
+                    seen.add(label)
+        return sorted(seen)

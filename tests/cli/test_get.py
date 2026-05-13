@@ -44,9 +44,9 @@ class TestGetCommand:
         assert "--comments" in result.output
 
     def test_get_default_table_format(self, runner, mock_client):
-        """Test get command with default table format calls format_issue."""
+        """Test get command with explicit table format calls format_issue."""
         with patch("temet_jira.cli.format_issue") as mock_format:
-            result = runner.invoke(jira, ["get", "TEST-1"])
+            result = runner.invoke(jira, ["get", "TEST-1", "--format", "table"])
 
             assert result.exit_code == 0
             mock_client.get_issue.assert_called_once_with("TEST-1", expand=["names"])
@@ -88,7 +88,7 @@ class TestGetCommand:
     def test_get_with_comments_flag(self, runner, mock_client):
         """Test get command with --comments flag fetches comments."""
         with patch("temet_jira.cli.format_issue") as mock_format:
-            result = runner.invoke(jira, ["get", "TEST-1", "--comments"])
+            result = runner.invoke(jira, ["get", "TEST-1", "--comments", "--format", "table"])
 
             assert result.exit_code == 0
             mock_client.get_comments.assert_called_once_with("TEST-1")

@@ -182,7 +182,7 @@ class TestIssueHeaderBuilder:
 class TestFormatIssue:
     """Tests for format_issue function."""
 
-    @patch("temet_jira.document.display.panels.console")
+    @patch("temet_jira.ui.console")
     def test_invalid_issue_shows_error(self, mock_console) -> None:
         """Invalid issue data shows error message."""
         format_issue({})
@@ -190,13 +190,13 @@ class TestFormatIssue:
         call_args = str(mock_console.print.call_args)
         assert "Invalid" in call_args or "red" in call_args
 
-    @patch("temet_jira.document.display.panels.console")
+    @patch("temet_jira.ui.console")
     def test_valid_issue_prints_panel(self, mock_console, sample_issue: dict) -> None:
         """Valid issue prints panel to console."""
         format_issue(sample_issue)
         mock_console.print.assert_called()
 
-    @patch("temet_jira.document.display.panels.console")
+    @patch("temet_jira.ui.console")
     def test_issue_with_description(self, mock_console) -> None:
         """Issue with description prints description."""
         issue = {
@@ -211,7 +211,7 @@ class TestFormatIssue:
         calls = [str(c) for c in mock_console.print.call_args_list]
         assert any("Description" in c for c in calls)
 
-    @patch("temet_jira.document.display.panels.console")
+    @patch("temet_jira.ui.console")
     def test_issue_with_adf_description(self, mock_console) -> None:
         """Issue with ADF description extracts text."""
         issue = {
@@ -235,7 +235,7 @@ class TestFormatIssue:
         calls = [str(c) for c in mock_console.print.call_args_list]
         assert any("ADF content" in c for c in calls)
 
-    @patch("temet_jira.document.display.panels.console")
+    @patch("temet_jira.ui.console")
     def test_issue_with_labels(self, mock_console) -> None:
         """Issue with labels prints labels."""
         issue = {
@@ -250,7 +250,7 @@ class TestFormatIssue:
         calls = [str(c) for c in mock_console.print.call_args_list]
         assert any("urgent" in c for c in calls)
 
-    @patch("temet_jira.document.display.panels.console")
+    @patch("temet_jira.ui.console")
     def test_issue_with_parent(self, mock_console) -> None:
         """Issue with parent prints parent key."""
         issue = {
@@ -573,7 +573,7 @@ def _render_all_console_output(mock_console: Any) -> str:
 class TestFormatIssueSubtasks:
     """Tests for subtasks display in format_issue."""
 
-    @patch("temet_jira.document.display.panels.console")
+    @patch("temet_jira.ui.console")
     def test_subtasks_displayed(self, mock_console, enhanced_issue: dict) -> None:
         """Subtasks render a table with key, summary, and status."""
         format_issue(enhanced_issue)
@@ -582,7 +582,7 @@ class TestFormatIssueSubtasks:
         assert "TEST-457" in output
         assert "Subtask 1" in output
 
-    @patch("temet_jira.document.display.panels.console")
+    @patch("temet_jira.ui.console")
     def test_no_subtasks_no_section(self, mock_console, minimal_issue: dict) -> None:
         """No subtasks section when subtasks list is empty."""
         format_issue(minimal_issue)
@@ -593,7 +593,7 @@ class TestFormatIssueSubtasks:
 class TestFormatIssueLinkedIssues:
     """Tests for linked issues display in format_issue."""
 
-    @patch("temet_jira.document.display.panels.console")
+    @patch("temet_jira.ui.console")
     def test_outward_links_displayed(self, mock_console, enhanced_issue: dict) -> None:
         """Outward linked issues render relation, key, summary, status."""
         format_issue(enhanced_issue)
@@ -602,7 +602,7 @@ class TestFormatIssueLinkedIssues:
         assert "TEST-458" in output
         assert "blocks" in output
 
-    @patch("temet_jira.document.display.panels.console")
+    @patch("temet_jira.ui.console")
     def test_inward_links_displayed(self, mock_console) -> None:
         """Inward linked issues render with inward relation label."""
         issue = {
@@ -630,7 +630,7 @@ class TestFormatIssueLinkedIssues:
         assert "TEST-999" in output
         assert "is blocked by" in output
 
-    @patch("temet_jira.document.display.panels.console")
+    @patch("temet_jira.ui.console")
     def test_no_links_no_section(self, mock_console, minimal_issue: dict) -> None:
         """No linked issues section when issuelinks list is absent."""
         format_issue(minimal_issue)
@@ -641,7 +641,7 @@ class TestFormatIssueLinkedIssues:
 class TestFormatIssueAttachments:
     """Tests for attachments display in format_issue."""
 
-    @patch("temet_jira.document.display.panels.console")
+    @patch("temet_jira.ui.console")
     def test_attachments_displayed(self, mock_console, enhanced_issue: dict) -> None:
         """Attachments render a table with filename and human-readable size."""
         format_issue(enhanced_issue)
@@ -651,7 +651,7 @@ class TestFormatIssueAttachments:
         # 102400 bytes = 100.0 KB
         assert "100.0 KB" in output
 
-    @patch("temet_jira.document.display.panels.console")
+    @patch("temet_jira.ui.console")
     def test_no_attachments_no_section(self, mock_console, minimal_issue: dict) -> None:
         """No attachments section when attachment list is absent."""
         format_issue(minimal_issue)
@@ -662,7 +662,7 @@ class TestFormatIssueAttachments:
 class TestFormatIssueComments:
     """Tests for comments display in format_issue."""
 
-    @patch("temet_jira.document.display.panels.console")
+    @patch("temet_jira.ui.console")
     def test_comments_displayed(self, mock_console) -> None:
         """Passing comments list to format_issue renders author, date, and body."""
         issue = {
@@ -685,7 +685,7 @@ class TestFormatIssueComments:
         assert any("Alice" in c for c in calls)
         assert any("This is a comment" in c for c in calls)
 
-    @patch("temet_jira.document.display.panels.console")
+    @patch("temet_jira.ui.console")
     def test_multiple_comments(self, mock_console) -> None:
         """Multiple comments are all displayed."""
         issue = {
@@ -714,7 +714,7 @@ class TestFormatIssueComments:
         assert any("First comment" in c for c in calls)
         assert any("Second comment" in c for c in calls)
 
-    @patch("temet_jira.document.display.panels.console")
+    @patch("temet_jira.ui.console")
     def test_no_comments_no_section(self, mock_console) -> None:
         """No comments section when comments is None."""
         issue = {
@@ -728,7 +728,7 @@ class TestFormatIssueComments:
         calls = [str(c) for c in mock_console.print.call_args_list]
         assert not any("Comments" in c for c in calls)
 
-    @patch("temet_jira.document.display.panels.console")
+    @patch("temet_jira.ui.console")
     def test_empty_comments_no_section(self, mock_console) -> None:
         """No comments section when comments list is empty."""
         issue = {
@@ -746,7 +746,7 @@ class TestFormatIssueComments:
 class TestFormatIssueBackwardCompatibility:
     """Tests that format_issue backward compatibility is preserved."""
 
-    @patch("temet_jira.document.display.panels.console")
+    @patch("temet_jira.ui.console")
     def test_call_without_comments_arg(self, mock_console) -> None:
         """Calling format_issue(issue) without comments arg does not raise."""
         issue = {
@@ -760,7 +760,7 @@ class TestFormatIssueBackwardCompatibility:
         format_issue(issue)
         mock_console.print.assert_called()
 
-    @patch("temet_jira.document.display.panels.console")
+    @patch("temet_jira.ui.console")
     def test_positional_only_arg(self, mock_console, sample_issue: dict) -> None:
         """Calling format_issue with only positional issue works as before."""
         format_issue(sample_issue)

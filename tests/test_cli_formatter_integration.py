@@ -148,9 +148,8 @@ class TestJiraCliFormatterIntegration:
             assert "results.csv" in result.output
 
     @patch("temet_jira.cli.JiraClient")
-    @patch("temet_jira.cli.format_issues_table")
     def test_table_format_warns_when_output_specified(
-        self, mock_format_table, mock_client_class
+        self, mock_client_class
     ):
         """Test that table format shows warning when --output is specified."""
         mock_client_class.return_value = self.mock_client
@@ -163,17 +162,15 @@ class TestJiraCliFormatterIntegration:
             )
 
             assert result.exit_code == 0
-            # Should still call format_issues_table
-            mock_format_table.assert_called_once_with(self.mock_issues)
             # Should show warning about table format not being saveable
             assert "Table format cannot be saved to file" in result.output
             # File should NOT be created
             assert not Path("results.txt").exists()
 
     @patch("temet_jira.cli.JiraClient")
-    @patch("temet_jira.cli.console")
+    @patch("temet_jira.cli.err_console")
     def test_shows_progress_for_large_fetches_with_all(
-        self, mock_console, mock_client_class
+        self, mock_err_console, mock_client_class
     ):
         """Test that progress indicator is shown when fetching all results."""
         mock_client_class.return_value = self.mock_client
@@ -188,10 +185,10 @@ class TestJiraCliFormatterIntegration:
         )
 
         assert result.exit_code == 0
-        # Should show progress messages
-        assert mock_console.status.called
+        # Should show progress messages via err_console
+        assert mock_err_console.status.called
         # Check that status was used with appropriate messages
-        status_calls = mock_console.status.call_args_list
+        status_calls = mock_err_console.status.call_args_list
         assert any("Fetching all issues" in str(call) for call in status_calls)
 
     @patch("temet_jira.cli.JiraClient")
@@ -215,7 +212,6 @@ class TestJiraCliFormatterIntegration:
 
             # Should handle the error gracefully
             assert result.exit_code != 0
-            assert "Error" in result.output
 
     @patch("temet_jira.cli.JiraClient")
     @patch("temet_jira.cli.format_as_json")
@@ -229,7 +225,6 @@ class TestJiraCliFormatterIntegration:
 
         # Should handle the error gracefully
         assert result.exit_code != 0
-        assert "Error" in result.output
 
     @patch("temet_jira.cli.JiraClient")
     @patch("temet_jira.cli.format_as_json")

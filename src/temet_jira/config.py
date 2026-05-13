@@ -1,13 +1,44 @@
 """Configuration management for temet-jira.
 
-Supports global config file (~/.config/temet-jira/config.yaml) with fallback to environment variables.
+The config file (~/.config/temet-jira/config.yaml) is the single source of truth.
+Values may contain ${VAR_NAME} references resolved from the environment at read time —
+this is an explicit user choice, not an implicit fallback.
 """
 
 import os
+import re
 from pathlib import Path
 from typing import Any
 
 import yaml
+
+
+def _interpolate(value: str) -> str:
+    """Resolve ${VAR_NAME} or $VAR_NAME references in a config value."""
+    def _replace(m: re.Match) -> str:  # type: ignore[type-arg]
+        var_name = m.group(1) or m.group(2)
+        return os.environ.get(var_name, m.group(0))
+    return re.sub(r'\$\{([^}]+)\}|\$([A-Z_][A-Z0-9_]*)', _replace, value)
+
+
+# Matches a bare $VAR or ${VAR} that is the entire value
+_BARE_ENV_REF_RE = re.compile(r'^\$\{?([A-Z_][A-Z0-9_]*)\}?$')
+
+
+def normalize_env_ref(value: str) -> tuple[str, str | None]:
+    """Normalize a bare env var reference to canonical ${VAR} form.
+
+    Returns (normalized_value, var_name_if_detected).
+    - ``$VAR``   → ``${VAR}``, var_name = "VAR"
+    - ``${VAR}`` → ``${VAR}``, var_name = "VAR"
+    - anything else → unchanged, var_name = None
+    """
+    m = _BARE_ENV_REF_RE.match(value.strip())
+    if m:
+        var_name = m.group(1)
+        return f"${{{var_name}}}", var_name
+    return value, None
+
 
 # Config file location (follows XDG Base Directory spec)
 CONFIG_DIR = Path.home() / ".config" / "temet-jira"
@@ -24,7 +55,19 @@ VALID_KEYS = {
     "default_format": "Default output format: table, json, jsonl, csv (default: table)",
 }
 
-# Mapping from config keys to environment variable names
+# Per-key validation: (hint, regex that a valid value must match)
+_KEY_VALIDATORS: dict[str, tuple[str, re.Pattern[str]]] = {
+    "base_url": (
+        "must be a URL starting with https:// or a ${VAR} reference",
+        re.compile(r"^https?://|\$\{"),
+    ),
+    "default_format": (
+        "must be one of: table, json, jsonl, csv",
+        re.compile(r"^(table|json|jsonl|csv|\$\{)"),
+    ),
+}
+
+# Used only by the setup command to suggest env var values to the user
 ENV_VAR_MAP = {
     "base_url": "JIRA_BASE_URL",
     "username": "JIRA_USERNAME",
@@ -35,15 +78,24 @@ ENV_VAR_MAP = {
     "default_format": "JIRA_DEFAULT_FORMAT",
 }
 
-
 _VALID_FORMATS = {"table", "json", "jsonl", "csv"}
 
 
-def get_default_format() -> str:
-    """Return the configured default output format, falling back to 'table'."""
-    raw = os.environ.get("JIRA_DEFAULT_FORMAT") or load_config().get("default_format", "table")
-    value = str(raw).lower()
-    return value if value in _VALID_FORMATS else "table"
+def validate_value(key: str, value: str) -> str | None:
+    """Validate a config value for the given key.
+
+    Returns an error message string if invalid, None if valid.
+    """
+    if key not in VALID_KEYS:
+        valid = ", ".join(VALID_KEYS)
+        return f"Unknown key '{key}'. Valid keys: {valid}"
+    if not value.strip():
+        return f"Value for '{key}' cannot be empty"
+    if key in _KEY_VALIDATORS:
+        hint, pattern = _KEY_VALIDATORS[key]
+        if not pattern.search(value):
+            return f"Invalid value for '{key}': {hint}. Got: {value!r}"
+    return None
 
 
 def get_config_path() -> Path:
@@ -57,14 +109,9 @@ def config_exists() -> bool:
 
 
 def load_config() -> dict[str, Any]:
-    """Load configuration from file.
-
-    Returns:
-        Dictionary of configuration values, empty dict if file doesn't exist.
-    """
+    """Load configuration from file."""
     if not CONFIG_FILE.exists():
         return {}
-
     try:
         with open(CONFIG_FILE) as f:
             config = yaml.safe_load(f)
@@ -74,60 +121,72 @@ def load_config() -> dict[str, Any]:
 
 
 def save_config(config: dict[str, Any]) -> None:
-    """Save configuration to file.
-
-    Args:
-        config: Dictionary of configuration values to save.
-    """
-    # Create config directory if it doesn't exist
+    """Save configuration to file."""
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-
-    # Set restrictive permissions on config file (contains secrets)
     with open(CONFIG_FILE, "w") as f:
         yaml.dump(config, f, default_flow_style=False, sort_keys=False)
-
-    # Make file readable only by owner (0600)
     CONFIG_FILE.chmod(0o600)
 
 
 def get_value(key: str) -> str | None:
-    """Get a configuration value.
+    """Get a configuration value from the config file.
 
-    Priority order:
-    1. Environment variable
-    2. Config file
+    Config file is the single source of truth. Values stored as ${VAR}
+    references are resolved from the environment at read time.
 
-    Args:
-        key: Configuration key (e.g., 'base_url')
-
-    Returns:
-        Configuration value or None if not set.
+    Returns None if the key is not set in the config file.
     """
-    # Check environment variable first
-    env_var = ENV_VAR_MAP.get(key)
-    if env_var:
-        env_value = os.environ.get(env_var)
-        if env_value:
-            return env_value
-
-    # Fall back to config file
     config = load_config()
-    return config.get(key)
+    raw = config.get(key)
+    if raw is None:
+        return None
+    resolved = _interpolate(str(raw))
+    return resolved if resolved else None
+
+
+def get_all_config() -> dict[str, str | None]:
+    """Get all configuration values from the config file.
+
+    Returns a dict of key → resolved value (None if not set).
+    """
+    config = load_config()
+    result: dict[str, str | None] = {}
+    for key in VALID_KEYS:
+        raw = config.get(key)
+        if raw is not None:
+            resolved = _interpolate(str(raw))
+            result[key] = resolved if resolved else None
+        else:
+            result[key] = None
+    return result
+
+
+def get_default_format() -> str:
+    """Return the configured default output format.
+
+    Reads from config file. Falls back to 'jsonl' when stdout is not a TTY,
+    'table' otherwise.
+    """
+    import sys
+
+    raw = load_config().get("default_format")
+    if raw:
+        value = _interpolate(str(raw)).lower()
+        if value in _VALID_FORMATS:
+            return value
+
+    return "jsonl" if not sys.stdout.isatty() else "table"
 
 
 def set_value(key: str, value: str) -> None:
     """Set a configuration value in the config file.
 
-    Args:
-        key: Configuration key
-        value: Value to set
-
     Raises:
-        ValueError: If key is not a valid configuration key.
+        ValueError: If key is invalid or value fails validation.
     """
-    if key not in VALID_KEYS:
-        raise ValueError(f"Invalid config key: {key}. Valid keys: {', '.join(VALID_KEYS.keys())}")
-
+    error = validate_value(key, value)
+    if error:
+        raise ValueError(error)
     config = load_config()
     config[key] = value
     save_config(config)
@@ -136,11 +195,7 @@ def set_value(key: str, value: str) -> None:
 def delete_value(key: str) -> bool:
     """Delete a configuration value from the config file.
 
-    Args:
-        key: Configuration key to delete
-
-    Returns:
-        True if key was deleted, False if it didn't exist.
+    Returns True if the key was deleted, False if it didn't exist.
     """
     config = load_config()
     if key in config:
@@ -150,35 +205,10 @@ def delete_value(key: str) -> bool:
     return False
 
 
-def get_all_config() -> dict[str, dict[str, Any]]:
-    """Get all configuration values with their sources.
-
-    Returns:
-        Dictionary mapping keys to {value, source} dicts.
-    """
-    file_config = load_config()
-    result: dict[str, dict[str, str | None]] = {}
-
-    for key in VALID_KEYS:
-        env_var = ENV_VAR_MAP.get(key)
-        env_value = os.environ.get(env_var) if env_var else None
-        file_value = file_config.get(key)
-
-        if env_value:
-            result[key] = {"value": env_value, "source": f"env ({env_var})"}
-        elif file_value:
-            result[key] = {"value": file_value, "source": "config file"}
-        else:
-            result[key] = {"value": None, "source": "not set"}
-
-    return result
-
-
 def is_configured() -> bool:
     """Check if the minimum required configuration is present.
 
-    Returns:
-        True if base_url, username, and api_token are all configured.
+    Returns True if base_url, username, and api_token are all set in config.
     """
     return all([
         get_value("base_url"),
@@ -188,21 +218,37 @@ def is_configured() -> bool:
 
 
 def mask_sensitive(value: str | None, key: str) -> str:
-    """Mask sensitive values for display.
-
-    Args:
-        value: The value to potentially mask
-        key: The config key (to determine if sensitive)
-
-    Returns:
-        Masked or original value.
-    """
+    """Mask sensitive values for display."""
     if value is None:
         return "(not set)"
-
     if key == "api_token":
         if len(value) > 8:
             return value[:4] + "*" * (len(value) - 8) + value[-4:]
         return "*" * len(value)
-
     return value
+
+
+def _project_meta_path(project_key: str) -> Path:
+    return CONFIG_DIR / f"project-{project_key.upper()}.yaml"
+
+
+def load_project_meta(project_key: str) -> dict[str, Any]:
+    """Load cached project metadata (components, labels, issue types)."""
+    path = _project_meta_path(project_key)
+    if not path.exists():
+        return {}
+    try:
+        with open(path) as f:
+            data = yaml.safe_load(f)
+            return data if isinstance(data, dict) else {}
+    except (yaml.YAMLError, OSError):
+        return {}
+
+
+def save_project_meta(project_key: str, meta: dict[str, Any]) -> Path:
+    """Save project metadata to per-project cache file."""
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    path = _project_meta_path(project_key)
+    with open(path, "w") as f:
+        yaml.dump(meta, f, default_flow_style=False, sort_keys=False)
+    return path

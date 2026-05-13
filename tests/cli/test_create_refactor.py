@@ -37,4 +37,4 @@ def test_create_help_text_updated(mock_client_cls):
     """create --help shows updated type description."""
     runner = CliRunner()
     result = runner.invoke(jira, ["create", "--help"])
-    assert "temet-jira types" in result.output
+    assert "metadata" in result.output

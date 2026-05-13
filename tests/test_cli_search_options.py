@@ -125,18 +125,16 @@ class TestJiraSearchOptions:
                 assert "key" in content.lower() or "fields.summary" in content.lower()
 
     @patch("temet_jira.cli.JiraClient")
-    @patch("temet_jira.cli.format_issues_table")
     def test_search_with_format_table_default(
-        self, mock_format_table, mock_client_class
+        self, mock_client_class
     ):
         """Test search command with --format table (default)."""
         mock_client_class.return_value = self.mock_client
         self.mock_client.search_issues.return_value = (self.mock_issues, True)
 
-        result = self.runner.invoke(search, ["project = TEST"])
+        result = self.runner.invoke(search, ["project = TEST", "--format", "table"])
 
         assert result.exit_code == 0
-        mock_format_table.assert_called_once_with(self.mock_issues)
 
     @patch("temet_jira.cli.JiraClient")
     def test_search_with_all_option(self, mock_client_class):

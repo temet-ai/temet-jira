@@ -2,7 +2,6 @@
 
 from typing import Any, Self
 
-from rich.console import Console
 from rich.table import Table
 
 from temet_jira.document.display.formatters import (
@@ -13,120 +12,122 @@ from temet_jira.document.display.formatters import (
     truncate_summary,
 )
 
-console = Console()
+
+def _get_console() -> Any:
+    from temet_jira.ui import console
+    return console
+
+
+_ALL_COLUMN_DEFS: list[tuple[str, str, str, bool]] = [
+    # (header, data_key, style, no_wrap)
+    ("Key",      "key",      "key",    True),
+    ("Type",     "type",     "",       False),
+    ("Summary",  "summary",  "",       False),
+    ("Status",   "status",   "",       False),
+    ("Priority", "priority", "accent", False),
+    ("Assignee", "assignee", "muted",  False),
+    ("Updated",  "updated",  "muted",  False),
+]
+
+_DEFAULT_COLUMN_KEYS = ["key", "type", "summary", "status", "assignee", "updated"]
 
 
 class IssueTableBuilder:
     """Builder for creating Rich Tables displaying Jira issues."""
 
     def __init__(self, title: str = "Jira Issues") -> None:
-        """Initialize with table title."""
         self._title = title
         self._issues: list[dict[str, Any]] = []
         self._max_results: int = 50
-        self._columns: list[tuple[str, str, bool]] = []  # (name, style, no_wrap)
-        self._setup_default_columns()
-
-    def _setup_default_columns(self) -> None:
-        """Set up default column configuration."""
-        self._columns = [
-            ("Key", "cyan", True),
-            ("Type", "green", False),
-            ("Summary", "white", False),
-            ("Status", "yellow", False),
-            ("Priority", "magenta", False),
-            ("Assignee", "green", False),
-            ("Updated", "blue", False),
-        ]
+        self._col_filter: list[str] | None = None
+        self._no_truncate: bool = False
+        self._show_headers: bool = True
 
     def with_issues(self, issues: list[dict[str, Any]]) -> Self:
-        """Set issues to display."""
         self._issues = issues
         return self
 
     def with_max_results(self, max_results: int) -> Self:
-        """Set maximum results to display."""
         self._max_results = max_results
         return self
 
     def with_title(self, title: str) -> Self:
-        """Set table title."""
         self._title = title
         return self
 
+    def with_column_filter(self, columns: list[str]) -> Self:
+        """Show only the specified columns (lowercase names: key, type, summary, etc.)."""
+        self._col_filter = [c.lower() for c in columns]
+        return self
+
+    def with_no_truncate(self, no_truncate: bool) -> Self:
+        self._no_truncate = no_truncate
+        return self
+
+    def with_show_headers(self, show_headers: bool) -> Self:
+        self._show_headers = show_headers
+        return self
+
+    def _active_columns(self) -> list[tuple[str, str, str, bool]]:
+        """Return column defs filtered by col_filter (or default set)."""
+        wanted = self._col_filter if self._col_filter is not None else _DEFAULT_COLUMN_KEYS
+        return [c for c in _ALL_COLUMN_DEFS if c[1] in wanted]
+
+    def _extract_row_dict(self, issue: dict[str, Any]) -> dict[str, str]:
+        from temet_jira.ui.status import format_status
+        fields = issue.get("fields", {})
+        status_obj = fields.get("status") or {}
+        status_name = status_obj.get("name", "Unknown")
+        category_key = (status_obj.get("statusCategory") or {}).get("key")
+        summary = fields.get("summary", "No Summary")
+        if not self._no_truncate:
+            summary = truncate_summary(summary, 60)
+        return {
+            "key": issue.get("key", "N/A"),
+            "type": (fields.get("issuetype") or {}).get("name", "Unknown"),
+            "summary": summary,
+            "status": format_status(status_name, category_key),
+            "priority": get_priority(fields),
+            "assignee": get_user_display(fields.get("assignee")),
+            "updated": format_date_relative(fields.get("updated")),
+        }
+
     def _create_table(self) -> Table:
-        """Create the Rich Table with configured columns."""
         displayed = min(len(self._issues), self._max_results)
         title = f"{self._title} (showing {displayed} of {len(self._issues)})"
-        table = Table(title=title)
-
-        for name, style, no_wrap in self._columns:
-            table.add_column(name, style=style, no_wrap=no_wrap)
-
+        table = Table(
+            title=title,
+            show_header=self._show_headers,
+            header_style="header",
+            box=None,
+            show_edge=False,
+            pad_edge=True,
+        )
+        for header, _key, style, no_wrap in self._active_columns():
+            table.add_column(header, style=style or None, no_wrap=no_wrap)
         return table
 
-    def _extract_row(self, issue: dict[str, Any]) -> tuple[str, ...]:
-        """Extract row data from an issue."""
-        fields = issue.get("fields", {})
-
-        key = issue.get("key", "N/A")
-        issue_type = fields.get("issuetype", {}).get("name", "Unknown")
-        summary = truncate_summary(fields.get("summary", "No Summary"), 60)
-        status = fields.get("status", {}).get("name", "Unknown")
-        priority = get_priority(fields)
-        assignee = get_user_display(fields.get("assignee"))
-        updated = format_date_relative(fields.get("updated"))
-
-        return (key, issue_type, summary, status, priority, assignee, updated)
-
     def build(self) -> Table:
-        """Build the Rich Table."""
         table = self._create_table()
-
+        active = self._active_columns()
         for issue in self._issues[: self._max_results]:
-            table.add_row(*self._extract_row(issue))
-
+            row_dict = self._extract_row_dict(issue)
+            table.add_row(*[row_dict[col[1]] for col in active])
         return table
 
     @classmethod
     def default(
         cls, issues: list[dict[str, Any]], title: str = "Jira Issues", max_results: int = 50
     ) -> Table:
-        """Build table with default configuration."""
-        return (
-            cls(title=title)
-            .with_issues(issues)
-            .with_max_results(max_results)
-            .build()
-        )
+        return cls(title=title).with_issues(issues).with_max_results(max_results).build()
 
 
 class CompactIssueTableBuilder(IssueTableBuilder):
     """Builder for compact issue tables (fewer columns)."""
 
-    def _setup_default_columns(self) -> None:
-        """Set up compact column configuration."""
-        self._columns = [
-            ("Key", "cyan", True),
-            ("Summary", "white", False),
-            ("Status", "yellow", False),
-            ("Priority", "magenta", False),
-            ("Assignee", "green", False),
-            ("Updated", "blue", False),
-        ]
-
-    def _extract_row(self, issue: dict[str, Any]) -> tuple[str, ...]:
-        """Extract row data for compact view."""
-        fields = issue.get("fields", {})
-
-        key = issue.get("key", "N/A")
-        summary = truncate_summary(fields.get("summary", "No Summary"), 50)
-        status = fields.get("status", {}).get("name", "Unknown")
-        priority = get_priority(fields)
-        assignee = get_user_display(fields.get("assignee"))
-        updated = format_date(fields.get("updated"))
-
-        return (key, summary, status, priority, assignee, updated)
+    def __init__(self, title: str = "Jira Issues") -> None:
+        super().__init__(title)
+        self._col_filter = ["key", "summary", "status", "assignee"]
 
 
 class ProjectTableBuilder:
@@ -201,27 +202,43 @@ class TransitionTableBuilder:
         return cls().with_transitions(transitions).build()
 
 
-def format_issues_table(issues: list[dict[str, Any]], max_results: int = 50) -> None:
+def format_issues_table(
+    issues: list[dict[str, Any]],
+    max_results: int = 50,
+    columns: list[str] | None = None,
+    no_truncate: bool = False,
+    show_headers: bool = True,
+) -> None:
     """Format and display multiple Jira issues in a table."""
+    c = _get_console()
     if not issues:
-        console.print("[yellow]No issues found[/yellow]")
+        c.print("[warning]No issues found[/warning]")
         return
 
-    table = IssueTableBuilder.default(issues, max_results=max_results)
-    console.print(table)
+    builder = (
+        IssueTableBuilder()
+        .with_issues(issues)
+        .with_max_results(max_results)
+        .with_no_truncate(no_truncate)
+        .with_show_headers(show_headers)
+    )
+    if columns:
+        builder = builder.with_column_filter(columns)
+    table = builder.build()
+    c.print(table)
 
     if len(issues) > max_results:
-        console.print(
-            f"\n[yellow]Showing first {max_results} results. "
-            "Use --max-results to see more.[/yellow]"
+        c.print(
+            f"\n[warning]Showing first {max_results} results. "
+            "Use --max-results to see more.[/warning]"
         )
 
 
 def format_projects_table(projects: list[dict[str, Any]]) -> None:
     """Format and display projects in a table."""
-    console.print(ProjectTableBuilder.default(projects))
+    _get_console().print(ProjectTableBuilder.default(projects))
 
 
 def format_transitions_table(transitions: list[dict[str, Any]]) -> None:
     """Format and display transitions in a table."""
-    console.print(TransitionTableBuilder.default(transitions))
+    _get_console().print(TransitionTableBuilder.default(transitions))

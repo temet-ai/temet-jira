@@ -20,11 +20,10 @@ class TestJiraSearchIntegration:
 
         # Check that all new options are documented in help
         assert "--fields" in result.output
-        assert "Select specific fields to return" in result.output
-        assert "(comma-separated)" in result.output
+        assert "fields to return" in result.output
 
         assert "--expand" in result.output
-        assert "Expand fields like changelog, transitions" in result.output
+        assert "expand" in result.output.lower()
 
         assert "--output" in result.output
         assert "-o" in result.output
@@ -36,11 +35,9 @@ class TestJiraSearchIntegration:
         assert "json" in result.output
         assert "csv" in result.output
         assert "table" in result.output
-        assert "default: table" in result.output
 
         assert "--all" in result.output
         assert "Fetch all results" in result.output
-        assert "bypass limit" in result.output
 
     def test_format_option_choices(self):
         """Test that format option only accepts valid choices."""

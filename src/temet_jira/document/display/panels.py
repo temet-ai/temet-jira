@@ -3,7 +3,6 @@
 import re
 from typing import Any, Self
 
-from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
@@ -15,7 +14,10 @@ from temet_jira.document.display.formatters import (
     get_user_display,
 )
 
-console = Console()
+
+def _get_console() -> Any:
+    from temet_jira.ui import console
+    return console
 
 
 class IssuePanelBuilder:
@@ -186,20 +188,20 @@ class IssueHeaderBuilder:
     def add_priority(self) -> Self:
         """Add priority row."""
         self._table.add_row(
-            "Priority:", self._fields.get("priority", {}).get("name", "None")
+            "Priority:", (self._fields.get("priority") or {}).get("name", "None")
         )
         return self
 
     def add_reporter(self) -> Self:
         """Add reporter row if present."""
-        reporter = self._fields.get("reporter", {})
+        reporter = self._fields.get("reporter") or {}
         if reporter:
             self._table.add_row("Reporter:", reporter.get("displayName", "Unknown"))
         return self
 
     def add_assignee(self) -> Self:
         """Add assignee row."""
-        assignee = self._fields.get("assignee", {})
+        assignee = self._fields.get("assignee") or {}
         if assignee:
             self._table.add_row("Assignee:", assignee.get("displayName", "Unassigned"))
         else:
@@ -439,8 +441,9 @@ def format_issue(
         comments: Optional list of comment dicts to display (from client.get_comments())
         show_all_fields: If True, show unmapped custom fields in "Other Fields" section.
     """
+    console = _get_console()
     if not issue or "fields" not in issue:
-        console.print("[red]Invalid issue data received[/red]")
+        console.print("[error]Invalid issue data received[/error]")
         return
 
     fields = issue.get("fields", {})

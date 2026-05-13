@@ -1,0 +1,7 @@
+SUCCESS = "✓"
+FAILURE = "✗"
+WARNING = "⚠"
+INFO = "ℹ"
+BULLET = "•"
+ARROW = "→"
+CHILD = "↳"

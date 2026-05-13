@@ -10,16 +10,12 @@ from tests.conftest import TEST_JIRA_API_TOKEN, TEST_JIRA_BASE_URL, TEST_JIRA_US
 
 @pytest.fixture
 def jira_client():
-    """Create a Jira client with mocked credentials."""
-    with patch.dict(
-        "os.environ",
-        {
-            "JIRA_BASE_URL": TEST_JIRA_BASE_URL,
-            "JIRA_USERNAME": TEST_JIRA_USERNAME,
-            "JIRA_API_TOKEN": TEST_JIRA_API_TOKEN,
-        },
-    ):
-        return JiraClient()
+    """Create a Jira client with test credentials passed directly."""
+    return JiraClient(
+        base_url=TEST_JIRA_BASE_URL,
+        username=TEST_JIRA_USERNAME,
+        api_token=TEST_JIRA_API_TOKEN,
+    )
 
 
 @pytest.fixture

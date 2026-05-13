@@ -107,12 +107,11 @@ class TestAnalyzeCommandGroup:
         assert result.exit_code != 0
         assert "Missing argument" in result.output or "Usage:" in result.output
 
-        # Test missing output option
+        # --output is optional; omitting it prints to console and succeeds
         dummy_file = tmp_path / "dummy.json"
         dummy_file.write_text("[]")
         result = runner.invoke(jira, ["analyze", "state-durations", str(dummy_file)])
-        assert result.exit_code != 0
-        assert "Missing option" in result.output or "required" in result.output.lower()
+        assert result.exit_code == 0
 
     def test_state_durations_with_valid_file(self, runner, sample_issues, tmp_path):
         """Test state-durations with valid input file."""
@@ -152,7 +151,7 @@ class TestAnalyzeCommandGroup:
             assert result.exit_code == 0
             assert output_file.exists()
             assert (
-                "Successfully" in result.output or "completed" in result.output.lower()
+                "Analyzed" in result.output or "saved" in result.output.lower()
             )
 
     def test_state_durations_with_date_filters(self, runner, sample_issues, tmp_path):
