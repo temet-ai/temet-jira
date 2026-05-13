@@ -27,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
 
       - uses: astral-sh/setup-uv@v5
 
@@ -39,48 +39,37 @@ jobs:
 
           bump_semver() {
             local v=$1 part=$2
-            local major minor patch pre
-            # strip pre-release suffix
             base=$(echo "$v" | sed 's/[ab][0-9]*$//' | sed 's/rc[0-9]*$//')
             major=$(echo "$base" | cut -d. -f1)
             minor=$(echo "$base" | cut -d. -f2)
             patch=$(echo "$base" | cut -d. -f3)
-            # current pre index (0 if none)
             pre_suffix=$(echo "$v" | grep -oE '[ab][0-9]+|rc[0-9]+' || echo "")
             pre_num=$(echo "$pre_suffix" | grep -oE '[0-9]+' || echo "0")
-
             case "$part" in
-              major) echo "$((major+1)).0.0" ;;
-              minor) echo "${major}.$((minor+1)).0" ;;
-              patch) echo "${major}.${minor}.$((patch+1))" ;;
+              major)     echo "$((major+1)).0.0" ;;
+              minor)     echo "${major}.$((minor+1)).0" ;;
+              patch)     echo "${major}.${minor}.$((patch+1))" ;;
               pre-alpha)
-                if echo "$pre_suffix" | grep -q '^a'; then
-                  echo "${major}.${minor}.${patch}a$((pre_num+1))"
-                else
-                  echo "${major}.${minor}.${patch}a1"
-                fi ;;
+                if echo "$pre_suffix" | grep -q '^a'; then echo "${major}.${minor}.${patch}a$((pre_num+1))"
+                else echo "${major}.${minor}.${patch}a1"; fi ;;
               pre-beta)
-                if echo "$pre_suffix" | grep -q '^b'; then
-                  echo "${major}.${minor}.${patch}b$((pre_num+1))"
-                else
-                  echo "${major}.${minor}.${patch}b1"
-                fi ;;
+                if echo "$pre_suffix" | grep -q '^b'; then echo "${major}.${minor}.${patch}b$((pre_num+1))"
+                else echo "${major}.${minor}.${patch}b1"; fi ;;
               pre-rc)
-                if echo "$pre_suffix" | grep -q '^rc'; then
-                  echo "${major}.${minor}.${patch}rc$((pre_num+1))"
-                else
-                  echo "${major}.${minor}.${patch}rc1"
-                fi ;;
+                if echo "$pre_suffix" | grep -q '^rc'; then echo "${major}.${minor}.${patch}rc$((pre_num+1))"
+                else echo "${major}.${minor}.${patch}rc1"; fi ;;
             esac
           }
 
           NEW=$(bump_semver "$OLD" "${{ inputs.bump }}")
           echo "new_version=$NEW" >> $GITHUB_OUTPUT
-
           sed -i "s/^version = \"${OLD}\"/version = \"${NEW}\"/" pyproject.toml
           echo "Bumped $OLD → $NEW"
 
-      - name: Commit and tag
+      - name: Build
+        run: uv build
+
+      - name: Commit, tag, and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -88,3 +77,8 @@ jobs:
           git commit -m "chore: release v${{ steps.bump.outputs.new_version }}"
           git tag "v${{ steps.bump.outputs.new_version }}"
           git push origin main "v${{ steps.bump.outputs.new_version }}"
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          environment: pypi

@@ -5,7 +5,7 @@ import json
 import os
 import re
 from collections import defaultdict
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -35,8 +35,20 @@ from .config import (
 )
 from .document import DocumentBuilder, TypedBuilder
 from .formatter import format_issue, format_issues_table
-from .ui import console, err_console, is_interactive, SUCCESS, FAILURE, WARNING, INFO, BULLET, CHILD, format_status
-from .ui.prompts import select, select_optional, checkbox, confirm, text as prompt_text
+from .ui import (
+    BULLET,
+    CHILD,
+    FAILURE,
+    INFO,
+    SUCCESS,
+    WARNING,
+    console,
+    err_console,
+    format_status,
+    is_interactive,
+)
+from .ui.prompts import checkbox, confirm, select, select_optional
+from .ui.prompts import text as prompt_text
 
 # Load environment variables from .env file
 load_dotenv()
@@ -153,7 +165,7 @@ def activity(project: str | None, stale_days: int) -> None:
         temet-jira activity --project PROJ
         temet-jira activity --stale-days 5
     """
-    from datetime import timedelta, timezone
+    from datetime import timedelta
 
     client = JiraClient()
     project_key = project or get_value("project")
@@ -171,15 +183,12 @@ def activity(project: str | None, stale_days: int) -> None:
         backlog_count = 0
 
         if board:
+            import contextlib
             board_id = board["id"]
-            try:
+            with contextlib.suppress(Exception):
                 active_sprint = client.get_active_sprint(board_id)
-            except Exception:
-                pass
-            try:
+            with contextlib.suppress(Exception):
                 backlog_count = client.get_backlog_count(board_id)
-            except Exception:
-                pass
 
     def _board_url(board: dict[str, Any]) -> str:
         board_id = board["id"]
@@ -216,7 +225,7 @@ def activity(project: str | None, stale_days: int) -> None:
         if end_date_str:
             try:
                 end_date = datetime.fromisoformat(end_date_str.replace("Z", "+00:00"))
-                days_left = (end_date - datetime.now(timezone.utc)).days
+                days_left = (end_date - datetime.now(UTC)).days
                 sprint_label = f"[accent]{sprint_name}[/accent]  [muted]({days_left}d remaining)[/muted]"
             except ValueError:
                 sprint_label = f"[accent]{sprint_name}[/accent]"
@@ -232,7 +241,7 @@ def activity(project: str | None, stale_days: int) -> None:
     console.print(Panel(project_table, title=project_title, title_align="left", border_style="cyan"))
 
     # --- My Work section ---
-    stale_cutoff = (datetime.now(timezone.utc) - timedelta(days=stale_days)).strftime("%Y-%m-%d")
+    stale_cutoff = (datetime.now(UTC) - timedelta(days=stale_days)).strftime("%Y-%m-%d")
 
     sprint_clause = f'sprint = "{active_sprint["name"]}"' if active_sprint else ""
 
@@ -793,7 +802,9 @@ def search(
                         p = f.get("priority")
                         row.append(p.get("name", "") if p else "")
                     elif col in ("updated", "created"):
-                        from temet_jira.document.display.formatters import format_date_relative
+                        from temet_jira.document.display.formatters import (
+                            format_date_relative,
+                        )
                         row.append(format_date_relative(f.get(col)))
                     else:
                         row.append(str(f.get(col, "")))
@@ -844,7 +855,6 @@ def transitions(issue_key: str, output_format: str | None) -> None:
             import sys
             print(_json.dumps(transitions_data, indent=2), file=sys.stdout)
         elif effective_fmt in ("jsonl", "csv"):
-            from temet_jira.document.display.formatters import format_as_jsonl, format_as_csv
             rows = [{"id": t["id"], "name": t["name"], "to": (t.get("to") or {}).get("name", "")} for t in transitions_data]
             if effective_fmt == "jsonl":
                 import sys
@@ -852,7 +862,9 @@ def transitions(issue_key: str, output_format: str | None) -> None:
                     import json as _json
                     print(_json.dumps(row), file=sys.stdout)
             else:
-                import csv, io, sys
+                import csv
+                import io
+                import sys
                 buf = io.StringIO()
                 writer = csv.DictWriter(buf, fieldnames=["id", "name", "to"])
                 writer.writeheader()
@@ -902,14 +914,18 @@ def types(project: str, output_format: str | None) -> None:
         from temet_jira.document.builders.profiles import TYPE_PROFILES
 
         if effective_fmt == "json":
-            import json as _json, sys
+            import json as _json
+            import sys
             print(_json.dumps(issue_types, indent=2), file=sys.stdout)
         elif effective_fmt == "jsonl":
-            import json as _json, sys
+            import json as _json
+            import sys
             for it in issue_types:
                 print(_json.dumps(it), file=sys.stdout)
         elif effective_fmt == "csv":
-            import csv, io, sys
+            import csv
+            import io
+            import sys
             rows = [{"name": it.get("name", ""), "subtask": it.get("subtask", False), "has_profile": it.get("name", "").lower() in TYPE_PROFILES} for it in sorted(issue_types, key=lambda x: x.get("name", ""))]
             buf = io.StringIO()
             writer = csv.DictWriter(buf, fieldnames=["name", "subtask", "has_profile"])
@@ -1868,9 +1884,9 @@ def _scan_env_suggestions() -> dict[str, list[tuple[str, str]]]:
     Returns a dict mapping field name → list of (VAR_NAME, partial_value) tuples.
     Standard vars (JIRA_BASE_URL etc.) are excluded since they're already auto-picked.
     """
-    _STANDARD = {"JIRA_BASE_URL", "JIRA_USERNAME", "JIRA_API_TOKEN",
-                 "JIRA_DEFAULT_PROJECT", "JIRA_DEFAULT_COMPONENT",
-                 "JIRA_DEFAULT_MAX_RESULTS", "JIRA_DEFAULT_FORMAT"}
+    standard = {"JIRA_BASE_URL", "JIRA_USERNAME", "JIRA_API_TOKEN",
+                "JIRA_DEFAULT_PROJECT", "JIRA_DEFAULT_COMPONENT",
+                "JIRA_DEFAULT_MAX_RESULTS", "JIRA_DEFAULT_FORMAT"}
     url_re = re.compile(r"url|base", re.I)
     user_re = re.compile(r"user|email|login", re.I)
     token_re = re.compile(r"token|key|secret", re.I)
@@ -1878,7 +1894,7 @@ def _scan_env_suggestions() -> dict[str, list[tuple[str, str]]]:
     suggestions: dict[str, list[tuple[str, str]]] = {"base_url": [], "username": [], "api_token": []}
 
     for var, val in sorted(os.environ.items()):
-        if var in _STANDARD:
+        if var in standard:
             continue
         if not (var.startswith("JIRA_") or var.startswith("ATLASSIAN_")):
             continue
@@ -1903,12 +1919,12 @@ def _prompt_with_env_suggestions(
 ) -> str:
     """Prompt for a value, offering env var references when suggestions exist."""
     if suggestions:
-        console.print(f"[muted]Found in your environment:[/muted]")
+        console.print("[muted]Found in your environment:[/muted]")
         for var, preview in suggestions:
             console.print(f"  [key]${{{var}}}[/key]  [muted]{preview}[/muted]")
         console.print()
         choices = [f"${{{var}}}" for var, _ in suggestions] + ["Enter a value manually"]
-        choice = select(f"Use an env var reference or enter manually?", choices)
+        choice = select("Use an env var reference or enter manually?", choices)
         if choice and not choice.startswith("Enter"):
             return choice
     return prompt_text(prompt_label, default=current or "", password=password)
@@ -2113,7 +2129,7 @@ def setup() -> None:
                 console.print("[muted]You can re-run setup later to fetch project metadata.[/muted]")
 
     console.print()
-    console.print(f"[success]Setup complete![/success]")
+    console.print("[success]Setup complete![/success]")
     console.print()
     console.print("Try these commands:")
     console.print("  [key]temet-jira config[/key]        - View your configuration")
@@ -2435,7 +2451,7 @@ def mcp_add() -> None:
             )
 
         console.print(
-            f"\n[muted]Run [key]temet-jira mcp tools[/key] for the list of available tools.[/muted]"
+            "\n[muted]Run [key]temet-jira mcp tools[/key] for the list of available tools.[/muted]"
         )
         console.print()
         if not confirm("Add snippet for another client too?", default=False):
@@ -2500,7 +2516,7 @@ def mcp_add() -> None:
         console.print("}")
 
     console.print(
-        f"\n[muted]Run [key]temet-jira mcp tools[/key] to see the list of available MCP tools.[/muted]\n"
+        "\n[muted]Run [key]temet-jira mcp tools[/key] to see the list of available MCP tools.[/muted]\n"
     )
 
 
