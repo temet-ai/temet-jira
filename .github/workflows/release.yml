@@ -1,0 +1,90 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump type"
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - pre-alpha
+          - pre-beta
+          - pre-rc
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Bump version
+        id: bump
+        run: |
+          OLD=$(grep '^version' pyproject.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          echo "old_version=$OLD" >> $GITHUB_OUTPUT
+
+          bump_semver() {
+            local v=$1 part=$2
+            local major minor patch pre
+            # strip pre-release suffix
+            base=$(echo "$v" | sed 's/[ab][0-9]*$//' | sed 's/rc[0-9]*$//')
+            major=$(echo "$base" | cut -d. -f1)
+            minor=$(echo "$base" | cut -d. -f2)
+            patch=$(echo "$base" | cut -d. -f3)
+            # current pre index (0 if none)
+            pre_suffix=$(echo "$v" | grep -oE '[ab][0-9]+|rc[0-9]+' || echo "")
+            pre_num=$(echo "$pre_suffix" | grep -oE '[0-9]+' || echo "0")
+
+            case "$part" in
+              major) echo "$((major+1)).0.0" ;;
+              minor) echo "${major}.$((minor+1)).0" ;;
+              patch) echo "${major}.${minor}.$((patch+1))" ;;
+              pre-alpha)
+                if echo "$pre_suffix" | grep -q '^a'; then
+                  echo "${major}.${minor}.${patch}a$((pre_num+1))"
+                else
+                  echo "${major}.${minor}.${patch}a1"
+                fi ;;
+              pre-beta)
+                if echo "$pre_suffix" | grep -q '^b'; then
+                  echo "${major}.${minor}.${patch}b$((pre_num+1))"
+                else
+                  echo "${major}.${minor}.${patch}b1"
+                fi ;;
+              pre-rc)
+                if echo "$pre_suffix" | grep -q '^rc'; then
+                  echo "${major}.${minor}.${patch}rc$((pre_num+1))"
+                else
+                  echo "${major}.${minor}.${patch}rc1"
+                fi ;;
+            esac
+          }
+
+          NEW=$(bump_semver "$OLD" "${{ inputs.bump }}")
+          echo "new_version=$NEW" >> $GITHUB_OUTPUT
+
+          sed -i "s/^version = \"${OLD}\"/version = \"${NEW}\"/" pyproject.toml
+          echo "Bumped $OLD → $NEW"
+
+      - name: Commit and tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pyproject.toml
+          git commit -m "chore: release v${{ steps.bump.outputs.new_version }}"
+          git tag "v${{ steps.bump.outputs.new_version }}"
+          git push origin main "v${{ steps.bump.outputs.new_version }}"
