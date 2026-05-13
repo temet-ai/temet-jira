@@ -4,6 +4,8 @@ In interactive mode (TTY): arrow-key navigation via questionary.
 In non-interactive mode (pipes, CI, --no-interactive): numbered prompts via click.
 """
 
+from typing import cast
+
 import click
 
 from .console import is_interactive
@@ -30,7 +32,7 @@ except ImportError:
 def select(message: str, choices: list[str], default: str | None = None) -> str | None:
     """Single arrow-key select; falls back to numbered prompt."""
     if _HAS_QUESTIONARY and is_interactive():
-        return questionary.select(message, choices=choices, default=default, style=_STYLE).ask()
+        return cast("str | None", questionary.select(message, choices=choices, default=default, style=_STYLE).ask())
     return _numbered_fallback(message, choices, default, allow_skip=False)
 
 
@@ -92,7 +94,7 @@ def _numbered_fallback(
         except ValueError:
             # treat as literal value
             if raw in choices:
-                return raw
+                return str(raw)
         click.echo(f"  Enter a number 1–{len(choices)}" + (" or 0 to skip" if allow_skip else ""))
 
 

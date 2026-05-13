@@ -100,9 +100,9 @@ class _HelpAwareGroup(click.Group):
             args = [args[0], "--help"]
         return super().parse_args(ctx, args)
 
-    def command(self, *args: object, **kwargs: object) -> object:
+    def command(self, *args: Any, **kwargs: Any) -> Any:
         kwargs.setdefault("cls", _HelpAwareCommand)
-        return super().command(*args, **kwargs)  # type: ignore[misc]
+        return super().command(*args, **kwargs)
 
 
 class _SectionedGroup(_HelpAwareGroup):
